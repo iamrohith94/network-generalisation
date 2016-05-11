@@ -1,0 +1,30 @@
+strict graph "wheel_graph(10)" {
+	0	 [bipartite=0];
+	1	 [bipartite=1];
+	0 -- 1;
+	2	 [bipartite=1];
+	0 -- 2;
+	3	 [bipartite=1];
+	0 -- 3;
+	4	 [bipartite=1];
+	0 -- 4;
+	5	 [bipartite=1];
+	0 -- 5;
+	6	 [bipartite=1];
+	0 -- 6;
+	7	 [bipartite=1];
+	0 -- 7;
+	8	 [bipartite=1];
+	0 -- 8;
+	9	 [bipartite=1];
+	0 -- 9;
+	1 -- 2;
+	1 -- 9;
+	2 -- 3;
+	3 -- 4;
+	4 -- 5;
+	5 -- 6;
+	6 -- 7;
+	7 -- 8;
+	8 -- 9;
+}
