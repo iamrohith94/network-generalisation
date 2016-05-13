@@ -76,6 +76,7 @@ def graph_to_edge_table(parameters):
     table = parameters['table'];
     xy_dict = nx.drawing.nx_agraph.graphviz_layout(G);
     conn = psycopg2.connect(database=db, user="postgres", password="postgres", host="127.0.0.1", port="5432")
+    #print "connected"
     cur = conn.cursor()
     cur.execute("DROP TABLE IF EXISTS "+table);
     cur.execute("CREATE TABLE "+table+" \
@@ -89,6 +90,7 @@ def graph_to_edge_table(parameters):
        y2 DOUBLE PRECISION NOT NULL, \
        the_geom geometry(LINESTRING, 4326) \
        )");
+    print "created "+table
     count = 0
     for edge in G.edges():
         id = count;
@@ -104,16 +106,19 @@ def graph_to_edge_table(parameters):
         rows=cur.fetchall()
         for row in rows:
             the_geom=row[0]
-        print the_geom
+        #print the_geom
         #print str(id) +","+str(src)+","+str(target)+","+str(x1)+","+str(y1)+","+str(x2)+","+str(y2);        
         cur.execute("INSERT INTO "+table+" \
         (id, source, target, x1, y1, x2, y2, the_geom) \
         VALUES(%s,%s,%s,%s,%s,%s,%s,%s)", (str(id), str(src), str(target), str(x1), str(y1), str(x2), str(y2), the_geom));
-    cur.execute("SELECT  pgr_createVerticesTable("+table+",source:='source',target:='target',the_geom:='the_geom');");
+    
+    cur.execute("SELECT  pgr_createVerticesTable('"+table+"',source:='source',target:='target',the_geom:='the_geom');");
     parameters['column'] = "the_geom"
     #update_geom_column(parameters)
     conn.commit()
     conn.close()
+
+
     
 
 def tuple_to_id(parameters):
@@ -125,4 +130,18 @@ def tuple_to_id(parameters):
         target = n*edge[1][0] + edge[1][1]
         G1.add_edge(src, target)
     return G1
+
+
+def edge_table_to_graph(parameters):
+    db = parameters['db']
+    table = parameters['table']
+    G = nx.Graph()
+    conn = psycopg2.connect(database=db, user="postgres", password="postgres", host="127.0.0.1", port="5432")
+    cur = conn.cursor()
+    cur.execute("SELECT source, target FROM "+table);
+    rows = cur.fetchall()
+    for row in rows:
+        G.add_edge(int(row[0]), int(row[1]))
+    return G
+
         
