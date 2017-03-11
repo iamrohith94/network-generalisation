@@ -95,29 +95,6 @@ def edge_table_to_graph_level(parameters):
             G.add_edge(int(row[1]), int(row[0]))
     return G
 
-def update_edges_to_lower_level(parameters):
-    db = parameters['db'];
-    table_e = parameters['table_e']
-    table_v = parameters['table_v']
-    parameters['query'] = "SELECT id FROM "+table_v+" WHERE level <= "+str(parameters['level']);
-    skeleton_vertices = get_selected_columns(parameters);
-    conn = parameters['conn']
-    cur = conn.cursor()
-    """
-    query = "UPDATE %s SET level = \
-    (SELECT level FROM %s \
-    WHERE id = source) \
-    WHERE (SELECT level FROM %s \
-    WHERE id = source) = \
-    (SELECT level FROM %s \
-    WHERE id = target) \
-    AND (SELECT level FROM %s \
-    WHERE id = source) < level";
-    """
-    query = "UPDATE %s SET level = %s \
-    WHERE source = ANY(%s) AND target = ANY(%s)";
-    cur.execute(query, (AsIs(table_e), parameters['level'], skeleton_vertices, skeleton_vertices, ));
-    conn.commit();
 
 def get_skeleton(parameters):
     db = parameters['db'];
@@ -133,39 +110,6 @@ def get_skeleton(parameters):
         within_nodes = row[1];
     return skeleton_id, within_nodes;
 
-def connect_components_to_skeleton(parameters):
-    db = parameters['db'];
-    table_e = parameters['table_e'];
-    table_v = parameters['table_v'];
-    level = parameters['level'];
-    conn = parameters['conn']
-    cur = conn.cursor();
-    skeleton_id, skeleton_nodes = get_skeleton(parameters);
-    largest_cc = set(skeleton_nodes);
-    parameters['nodes'] = largest_cc;
-    #print "Number of cc at level: "+str(level)+" are "+ str(len(connected_components))
-    query = "SELECT id, within_nodes FROM connected_components\
-     WHERE id != %s";
-    cur.execute(query, (skeleton_id,));
-    rows = cur.fetchall();
-    for row in rows:
-        nearest_vertex = -1;
-        poi = -1;
-        min_dist = 1000000;
-        for v in row[1]:
-            parameters['poi'] = v;
-            vid, dist = get_nearest_node(parameters);
-            if dist < min_dist:
-                nearest_vertex = vid;
-                min_dist = dist;
-                poi = v;
-        print "poi: ", poi;
-        print "nearest_vertex: ", nearest_vertex;
-        parameters['source'] = poi;
-        parameters['target'] = nearest_vertex;
-        update_promoted_level(parameters);
-        largest_cc.union(set(row[1]));
-    conn.commit();
 
 def update_level_skeleton(parameters):
     conn = parameters['conn']
@@ -176,8 +120,7 @@ def update_level_skeleton(parameters):
     nodes_to_add = []
     dijkstra_query = "SELECT node, edge from pgr_dijkstra(%s,%s,%s)"; 
     inner = 'SELECT id, source, target, cost, reverse_cost \
-    FROM '+parameters['table_e']+' \
-    WHERE is_contracted = FALSE';
+    FROM '+parameters['table_e'];
     for edge in paths_to_add:
         src = edge[0]
         target = edge[1]
@@ -187,6 +130,7 @@ def update_level_skeleton(parameters):
         for row in rows:
             nodes_to_add.append(row[0]);
             edges_to_add.append(row[1]);
+    #print "Edge Additions: ", edges_to_add
     cur.execute(update_query, (AsIs(parameters['table_e']), AsIs(parameters['promoted_level_column']), parameters['level'], edges_to_add, ));
     cur.execute(update_query, (AsIs(parameters['table_v']), AsIs(parameters['promoted_level_column']), parameters['level'], nodes_to_add, ));
 
