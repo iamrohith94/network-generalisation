@@ -115,10 +115,10 @@ def generate_edge_count(parameters):
     print "Number of vertex pairs: "+str(parameters['num_pairs']);
     count = {}
 
-    #Fetching edge ids from the edge table
+    #Fetching edge ids from the contracted edge table
     etab = {}
     etab["db"] = db;
-    etab["table"] = parameters['table_e'];
+    etab["table"] = parameters['contracted_table_e'];
     etab["column"] = parameters['column'];
     etab['conn'] = conn;
     edges = get_column_values(etab);
@@ -129,7 +129,7 @@ def generate_edge_count(parameters):
 
     #Inner query for dijkstra -> contracted graph is taken 
     inner = 'SELECT id, source, target, cost, reverse_cost \
-    FROM '+parameters['table_e']+' WHERE is_contracted = FALSE';
+    FROM '+parameters['contracted_table_e'];
 
     
     dijkstra_query = "SELECT edge from pgr_dijkstra(%s, %s, %s)";
@@ -139,7 +139,7 @@ def generate_edge_count(parameters):
     FROM %s as t1, %s AS t2 \
     ORDER BY random() LIMIT %s;"
     
-    cur.execute(random_query, (AsIs(parameters['table_v']), AsIs(parameters['table_v']), parameters['num_pairs'],));
+    cur.execute(random_query, (AsIs(parameters['contracted_table_v']), AsIs(parameters['contracted_table_v']), parameters['num_pairs'],));
     pairs = cur.fetchall();
     ind = 1;
     
@@ -148,6 +148,7 @@ def generate_edge_count(parameters):
         ind = ind+1
         s = pair[0]
         t = pair[1]
+        #print "source: "+str(s)+", target: "+str(t)
         cur.execute(dijkstra_query, (inner, s, t ));
         rows = cur.fetchall()
         for row in rows:
@@ -157,42 +158,6 @@ def generate_edge_count(parameters):
                 count[eid] = count[eid]+1
     #print count
     return count
-
-def generate_random_pairs(parameters):
-    db = parameters['db']
-    conn = parameters['conn']    
-    cur = conn.cursor()
-    random_query = "SELECT t1.id, t2.id \
-    FROM %s as t1, %s AS t2 \
-    ORDER BY random() LIMIT %s;"
-    cur.execute(random_query, (AsIs(parameters['table_v']), AsIs(parameters['table_v']), parameters['num_pairs'],));
-    rows = cur.fetchall();
-    pairs = [];
-    for row in rows:
-        pairs.append((row[0], row[1]));
-    return pairs
-
-def generate_random_level_pairs(parameters):
-    db = parameters['db']
-    conn = parameters['conn']
-    level_column = parameters['level_column'];
-    level = parameters['level']    
-    cur = conn.cursor()
-    random_query = "SELECT t1.id, t2.id \
-    FROM %s as t1, %s AS t2 \
-    WHERE t1.%s <= %s AND t2.%s <= %s \
-    ORDER BY random() LIMIT %s;"
-    cur.execute(random_query, (AsIs(parameters['table_v']), AsIs(parameters['table_v']), 
-        AsIs(parameters['level_column']), parameters['level'], 
-        AsIs(parameters['level_column']), parameters['level'],
-        parameters['num_pairs']));
-    rows = cur.fetchall();
-    pairs = [];
-    for row in rows:
-        pairs.append((row[0], row[1]));
-    return pairs
-
-
 
 def clean_data(parameters):
     """
@@ -212,8 +177,8 @@ def clean_data(parameters):
     parameters['directed'] = False;
     G = edge_table_to_graph(parameters);
 
-    print "Original Graph"
-    print G.edges()
+    #print "Original Graph"
+    #print G.edges()
 
     #Finding connected components in the graph
     cc =  sorted(nx.connected_components(G), key = len, reverse = True)
@@ -246,8 +211,6 @@ def clean_data(parameters):
     cur.execute(v_query, (removal,));
     conn.commit()
 
-    
-
 def update_promoted_level(parameters):
     n1 = parameters['source'];
     n2 = parameters['target'];
@@ -279,77 +242,6 @@ def update_promoted_level(parameters):
     conn.commit();
 
 
-
-def get_promoted_edges(parameters):
-    n1 = parameters['source'];
-    n2 = parameters['target'];
-    table_e = parameters['table_e'];
-    table_v = parameters['table_v'];
-    original_edge_table = parameters['original_edge_table']
-    level = parameters['level'];
-    db = parameters['db'];
-    conn = parameters['conn']
-    cur = conn.cursor()
-    inner = 'SELECT id,source,target,cost, reverse_cost FROM '+original_edge_table;
-    cur.execute("SELECT node, edge from pgr_dijkstra(%s,%s,%s)", (inner, n1, n2 ));
-    nodes = set()
-    edges = set()
-    rows = cur.fetchall()
-    for row in rows:
-        nodes.add(str(row[0]))
-        edges.add(str(row[1]))
-    return (nodes, edges);
-
-def get_nearest_node(parameters):
-    poi = parameters['poi'];
-    node_set = list(parameters['nodes']);
-    table = parameters['table_v'];
-    db = parameters['db'];
-    conn = parameters['conn']
-    cur = conn.cursor()
-    poi_query = "SELECT the_geom FROM "+table+" WHERE id = "+str(poi);
-    cur.execute(poi_query);
-    rows = cur.fetchall()
-    for row in rows:
-        poi_geom = row[0]
-    query = "SELECT id, ST_Distance(the_geom, %s) FROM "+table+" \
-    WHERE ST_DWithin(the_geom, %s, 100000)\
-    AND id = ANY(%s)\
-    ORDER BY ST_Distance(the_geom, %s)\
-    LIMIT 1;"
-    cur.execute(query, (poi_geom, poi_geom, node_set, poi_geom));
-    rows = cur.fetchall()
-    for row in rows:
-        nearest_node = row[0]
-        nearest_dist = row[1]
-    return nearest_node, nearest_dist;
-
-def get_nearest_node_in_table(parameters):
-    poi = parameters['poi'];
-    table = parameters['table'];
-    db = parameters['db'];
-    conn = parameters['conn']
-    cur = conn.cursor()
-    parameters['column'] = 'id';
-    node_set = get_column_values(parameters);
-    poi_query = "SELECT the_geom FROM "+table+" WHERE id = "+str(poi);
-    cur.execute(poi_query);
-    rows = cur.fetchall()
-    for row in rows:
-        poi_geom = row[0]
-    query = "SELECT id, ST_Distance(the_geom, %s) FROM "+table+" \
-    WHERE ST_DWithin(the_geom, %s, 100000)\
-    AND id = ANY(%s)\
-    ORDER BY ST_Distance(the_geom, %s)\
-    LIMIT 1;"
-    cur.execute(query, (poi_geom, poi_geom, node_set, poi_geom));
-    rows = cur.fetchall()
-    for row in rows:
-        nearest_node = row[0]
-        nearest_dist = row[1]
-    return nearest_node, nearest_dist;
-
-
 def populate_edge_levels(parameters):
     """
     Updates the level column in the edge table of a given set of edges
@@ -373,31 +265,18 @@ def populate_vertex_levels(parameters):
     cur = conn.cursor()
     update_query = "UPDATE %s SET %s = \
     (SELECT MIN(e.%s) FROM %s AS e WHERE e.source = %s.id OR e.target = %s.id) \
+    , %s = (SELECT MIN(e.%s) FROM %s AS e WHERE e.source = %s.id OR e.target = %s.id) \
     WHERE %s > (SELECT MIN(e.%s) FROM %s AS e WHERE e.source = %s.id OR e.target = %s.id)";
     cur.execute(update_query, 
         (AsIs(parameters['table_v']), AsIs(parameters['level_column']), 
         AsIs(parameters['level_column']), AsIs(parameters['table_e']),
         AsIs(parameters['table_v']), AsIs(parameters['table_v']), 
+        AsIs(parameters['promoted_level_column']),
+        AsIs(parameters['level_column']), AsIs(parameters['table_e']),
+        AsIs(parameters['table_v']), AsIs(parameters['table_v']),
         AsIs(parameters['level_column']),
         AsIs(parameters['level_column']), AsIs(parameters['table_e']),
         AsIs(parameters['table_v']), AsIs(parameters['table_v']), ));
-    conn.commit();
-
-def populate_levels(parameters):
-    conn = parameters['conn']
-    cur = conn.cursor();
-    update_query = "UPDATE %s SET %s \
-        = %s, %s = %s WHERE id = ANY(%s)";
-    cur.execute(update_query, 
-        (AsIs(parameters['table_v']), AsIs(parameters['level_column']), parameters['level'], 
-             AsIs(parameters['promoted_level_column']), parameters['level'],
-            parameters['level_vertices'], ));
-    update_query = "UPDATE %s SET %s = %s, %s = %s \
-        WHERE source = ANY(%s) AND target = ANY(%s)";
-    cur.execute(update_query, 
-        (AsIs(parameters['table_e']), AsIs(parameters['level_column']), parameters['level'], 
-            AsIs(parameters['promoted_level_column']), parameters['level'],
-            parameters['level_vertices'], parameters['level_vertices'], ));
     conn.commit();
 
 
