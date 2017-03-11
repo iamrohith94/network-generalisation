@@ -6,170 +6,188 @@ Created on Tue Feb 16 15:51:40 2016
 """
 
 import psycopg2
-import random
-import math
-import matplotlib.pyplot as plt
 import numpy as np
 from common import *;
-
-def generate_random_pairs(parameters):
-    vertex_map={}
-    vertex_pairs=[]
-    fraction=parameters['fraction']
-    size=parameters['size'];
-    vertex_count = parameters['vertex_count']
-    size=int(size*fraction)
-    while(len(vertex_pairs)!=size):
-        #print len(vertex_pairs),size
-        v1=random.randint(1,vertex_count)
-        v2=random.randint(1,vertex_count)
-        if v1==v2:
-            pass
-        if (v1,v2) not in vertex_map and (v2,v1) not in vertex_map:
-            vertex_map[(v1,v2)]=1
-            vertex_map[(v2,v1)]=1
-            vertex_pairs.append((v1,v2))
-    return vertex_pairs
+from path_class import *;
+from psycopg2.extensions import AsIs
 
 
-def add_count_column(parameters):
-    db=parameters['db']
-    table = parameters['table']
-    conn = psycopg2.connect(database=db, user="postgres", password="postgres", host="127.0.0.1", port="5432")    
-    cur = conn.cursor()
-    #cur.execute("ALTER TABLE "+table+" ADD COLUMN edge_count bigint default 0")
-    cur.execute("SELECT column_name \
-               FROM information_schema.columns \
-               WHERE table_schema='public' and table_name='"+table+"' \
-               AND column_name='edge_count'");
-               
-    rows = cur.fetchall();
-    col = ""
-    for row in rows:
-        col = row[0]
-    if col != "edge_count": 
-        cur.execute("ALTER TABLE "+table+" ADD COLUMN edge_count bigint default 0");
-    conn.commit()
-    conn.close()
-    
-def add_distance_column(parameters):
-    db=parameters['db']
-    conn = psycopg2.connect(database=db, user="postgres", password="postgres", host="127.0.0.1", port="5432")    
-    cur = conn.cursor()
-    cur.execute("ALTER TABLE ways ADD COLUMN edge_distance double precision default 0.000")
-    conn.commit()
-    conn.close()
-
-def generate_count(parameters):
-    vertex_pairs=parameters['vertex_pairs']
+"""
+Returns the networkX graph structure of an edge table
+row[0] -> source
+row[1] -> target
+row[2] -> cost
+row[3] -> reverse_cost
+"""   
+def edge_table_to_graph(parameters):
     db = parameters['db']
-    table = parameters['table']
-    conn = psycopg2.connect(database=db, user="postgres", password="postgres", host="127.0.0.1", port="5432")    
+    conn = parameters['conn']
+    cur = conn.cursor();
+
+    #query for vertex ids
+    vertex_query = "SELECT id FROM "+parameters['table_v'];
+
+    #query for edge ids
+    edge_query = "SELECT source, target, cost, reverse_cost FROM "+parameters['table_e'];
+    
+    #Undirected graph or directed graph
+    is_directed = parameters['directed'];
+    if is_directed:
+        G = nx.DiGraph();
+    else:
+        G = nx.Graph();
+    
+    #Adding vertices
+    cur.execute(vertex_query);
+    rows = cur.fetchall()
+    for row in rows:
+        G.add_node(row[0]);
+    
+    #Adding edges
+    cur.execute(edge_query);
+    rows = cur.fetchall()
+    for row in rows:
+        if row[2] > 0:
+            G.add_edge(int(row[0]), int(row[1]))
+        if row[3] > 0:
+            G.add_edge(int(row[1]), int(row[0]))
+    return G
+
+
+"""
+Returns the networkX graph structure
+given queries for edge and vertex tables
+row[0] -> source
+row[1] -> target
+row[2] -> cost
+row[3] -> reverse_cost
+"""   
+def edge_table_to_graph_level(parameters):
+    conn = parameters['conn']
+    cur = conn.cursor();
+
+    #query for vertex ids
+    vertex_query = "SELECT id FROM %s WHERE %s <= %s";
+
+    #query for edge ids
+    edge_query = "SELECT source, target, cost, reverse_cost FROM %s WHERE %s <= %s";
+    
+    #Undirected graph or directed graph
+    is_directed = parameters['directed'];
+    if is_directed:
+        G = nx.DiGraph();
+    else:
+        G = nx.Graph();
+    
+    #Adding vertices
+    cur.execute(vertex_query,(AsIs(parameters['table_v']), AsIs(parameters['level_column']), parameters['level'], ));
+    rows = cur.fetchall()
+    for row in rows:
+        G.add_node(row[0]);
+    
+    #Adding edges
+    cur.execute(edge_query,(AsIs(parameters['table_e']), AsIs(parameters['level_column']), parameters['level'], ));
+    rows = cur.fetchall()
+    for row in rows:
+        if row[2] > 0:
+            G.add_edge(int(row[0]), int(row[1]))
+        if row[3] > 0:
+            G.add_edge(int(row[1]), int(row[0]))
+    return G
+
+def update_edges_to_lower_level(parameters):
+    db = parameters['db'];
+    table_e = parameters['table_e']
+    table_v = parameters['table_v']
+    parameters['query'] = "SELECT id FROM "+table_v+" WHERE level <= "+str(parameters['level']);
+    skeleton_vertices = get_selected_columns(parameters);
+    conn = parameters['conn']
     cur = conn.cursor()
-    count={}
-    etab={}
-    etab["db"] = db;
-    etab["table"] = table;
-    edge_count=get_count(etab)
-    for x in xrange(0,edge_count+1):
-        count[int(x)]=0
-    for pair in vertex_pairs:
-        #print pair
-        s=pair[0]
-        t=pair[1]
-        inner = 'SELECT id,source,target,cost FROM '+table;
-        cur.execute("SELECT edge from pgr_dijkstra(%s,%s,%s,false)", (inner, s, t ));
+    """
+    query = "UPDATE %s SET level = \
+    (SELECT level FROM %s \
+    WHERE id = source) \
+    WHERE (SELECT level FROM %s \
+    WHERE id = source) = \
+    (SELECT level FROM %s \
+    WHERE id = target) \
+    AND (SELECT level FROM %s \
+    WHERE id = source) < level";
+    """
+    query = "UPDATE %s SET level = %s \
+    WHERE source = ANY(%s) AND target = ANY(%s)";
+    cur.execute(query, (AsIs(table_e), parameters['level'], skeleton_vertices, skeleton_vertices, ));
+    conn.commit();
+
+def get_skeleton(parameters):
+    db = parameters['db'];
+    conn = parameters['conn']
+    cur = conn.cursor();
+    query = "SELECT id, within_nodes FROM connected_components\
+             ORDER BY ST_area(st_envelope(the_geom)) DESC \
+             LIMIT 1";
+    cur.execute(query);
+    rows = cur.fetchall();
+    for row in rows:
+        skeleton_id = row[0];
+        within_nodes = row[1];
+    return skeleton_id, within_nodes;
+
+def connect_components_to_skeleton(parameters):
+    db = parameters['db'];
+    table_e = parameters['table_e'];
+    table_v = parameters['table_v'];
+    level = parameters['level'];
+    conn = parameters['conn']
+    cur = conn.cursor();
+    skeleton_id, skeleton_nodes = get_skeleton(parameters);
+    largest_cc = set(skeleton_nodes);
+    parameters['nodes'] = largest_cc;
+    #print "Number of cc at level: "+str(level)+" are "+ str(len(connected_components))
+    query = "SELECT id, within_nodes FROM connected_components\
+     WHERE id != %s";
+    cur.execute(query, (skeleton_id,));
+    rows = cur.fetchall();
+    for row in rows:
+        nearest_vertex = -1;
+        poi = -1;
+        min_dist = 1000000;
+        for v in row[1]:
+            parameters['poi'] = v;
+            vid, dist = get_nearest_node(parameters);
+            if dist < min_dist:
+                nearest_vertex = vid;
+                min_dist = dist;
+                poi = v;
+        print "poi: ", poi;
+        print "nearest_vertex: ", nearest_vertex;
+        parameters['source'] = poi;
+        parameters['target'] = nearest_vertex;
+        update_promoted_level(parameters);
+        largest_cc.union(set(row[1]));
+    conn.commit();
+
+def update_level_skeleton(parameters):
+    conn = parameters['conn']
+    cur = conn.cursor()
+    paths_to_add = parameters['path_additions'];
+    update_query = "UPDATE %s SET %s = %s WHERE id = ANY(%s)";
+    edges_to_add = []
+    nodes_to_add = []
+    dijkstra_query = "SELECT node, edge from pgr_dijkstra(%s,%s,%s)"; 
+    inner = 'SELECT id, source, target, cost, reverse_cost \
+    FROM '+parameters['table_e']+' \
+    WHERE is_contracted = FALSE';
+    for edge in paths_to_add:
+        src = edge[0]
+        target = edge[1]
+        #Adding the source and target into a table
+        cur.execute(dijkstra_query, (inner, src, target, ));
         rows = cur.fetchall()
         for row in rows:
-            eid=int(row[0])
-            #print eid	
-            if eid !=-1:
-                count[eid]=count[eid]+1
-    conn.close()
-    return count
-    
-def insert_count(parameters):
-    count=parameters['count']
-    db=parameters['db']
-    table=parameters['table']
-    conn = psycopg2.connect(database=db, user="postgres", password="postgres", host="127.0.0.1", port="5432")    
-    cur = conn.cursor()
-    for eid in count.keys():
-        cur.execute("UPDATE "+table+" SET edge_count="+str(count[eid])+" WHERE id= "+str(eid))
-    conn.commit()
-    conn.close()    
+            nodes_to_add.append(row[0]);
+            edges_to_add.append(row[1]);
+    cur.execute(update_query, (AsIs(parameters['table_e']), AsIs(parameters['promoted_level_column']), parameters['level'], edges_to_add, ));
+    cur.execute(update_query, (AsIs(parameters['table_v']), AsIs(parameters['promoted_level_column']), parameters['level'], nodes_to_add, ));
 
-
-def generate_edge_distance(parameters):
-    edge_distance={}
-    db=parameters['db']
-    table=parameters['table']
-    mean=get_vertex_centroid(parameters)
-    mean_x=mean[0]
-    mean_y=mean[1]
-    #print "vertex centroid: ",mean
-    conn = psycopg2.connect(database=db, user="postgres", password="postgres", host="127.0.0.1", port="5432")    
-    cur = conn.cursor()
-    cur.execute("SELECT gid ,ST_X((ST_Centroid(the_geom))),ST_Y((ST_Centroid(the_geom))) from "+table)
-    rows=cur.fetchall()
-    for row in rows:
-        eid=row[0]
-        #print "eid: ",eid
-        x=row[1]
-        y=row[2]
-        edge_distance[eid]=math.sqrt( math.pow(mean_x-x,2)+ math.pow(mean_y-y,2))
-    return edge_distance
-    
-def insert_distances(parameters):
-    edge_distance=parameters['edge_distance']
-    db=parameters['db']
-    conn = psycopg2.connect(database=db, user="postgres", password="postgres", host="127.0.0.1", port="5432")    
-    cur = conn.cursor()
-    for eid in edge_distance.keys():
-        cur.execute("UPDATE ways SET edge_distance="+str(edge_distance[eid])+" WHERE gid= "+str(eid))
-    conn.commit()
-    conn.close()
-
-    
-def create_new_ways(parameters):
-    db=parameters['db']
-    fraction=parameters['fraction']
-    percent=int(fraction*100)
-    conn = psycopg2.connect(database=db, user="postgres", password="postgres", host="127.0.0.1", port="5432")    
-    cur = conn.cursor()
-    cur.execute("DROP TABLE IF EXISTS ways_"+str(percent))
-    cur.execute("SELECT * INTO ways_"+str(percent)+" FROM ways" )
-    conn.commit()
-    conn.close()
-
-"""d={}
-d["db"]="gachibowli_2"
-d["table"]="ways_vertices_pgr"
-vertex_count=get_count(d);
-d["vertex_count"]=vertex_count
-d["size"]=vertex_count*vertex_count
-d["table"]="ways"
-#print d["vertex_count"]
-d["fraction"]=0.3
-#print generate_random_pairs(d)
-#add_count_column(d)
-#add_distance_column(d)
-d["vertex_pairs"]=generate_random_pairs(d)
-d["count"]= generate_count(d)
-d["column"]="the_geom"
-d["srid"]=32643
-#print d["count"]
-insert_count(d)
-#change_vertices_geometry(d)
-#change_edges_geometry(d)
-d["edge_distance"]=generate_edge_distance(d)
-#print max(d["edge_distance"].values())
-insert_distances(d)
-create_new_ways(d)
-
-x=np.array(d["edge_distance"].values())
-y=np.array(d["count"].values())
-sorted_y=sorted(y)
-#plt.plot(x,y,'ro')
-plt.plot(sorted_y)
-#plt.show() """
+    conn.commit();
