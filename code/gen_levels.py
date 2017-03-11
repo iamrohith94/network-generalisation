@@ -92,6 +92,5 @@ for n in n_percentile:
 	d['intervals'] = intervals;
 	update_with_intervals(d);
 
-
 conn.commit()
 conn.close()

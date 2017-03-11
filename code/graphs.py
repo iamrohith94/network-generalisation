@@ -80,13 +80,15 @@ def edge_table_to_graph_level(parameters):
         G = nx.Graph();
     
     #Adding vertices
-    cur.execute(vertex_query,(AsIs(parameters['table_v']), AsIs(parameters['level_column']), parameters['level'], ));
+    cur.execute(vertex_query,(AsIs(parameters['table_v']), 
+        AsIs(parameters['promoted_level_column']), parameters['level'], ));
     rows = cur.fetchall()
     for row in rows:
         G.add_node(row[0]);
     
     #Adding edges
-    cur.execute(edge_query,(AsIs(parameters['table_e']), AsIs(parameters['level_column']), parameters['level'], ));
+    cur.execute(edge_query,(AsIs(parameters['table_e']), 
+        AsIs(parameters['promoted_level_column']), parameters['level'], ));
     rows = cur.fetchall()
     for row in rows:
         if row[2] > 0:
