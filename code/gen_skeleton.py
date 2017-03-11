@@ -11,7 +11,7 @@ from connected_components import *
 db = sys.argv[1];
 table_e = 'cleaned_ways'
 table_v = 'cleaned_ways_vertices_pgr'
-breaks = [10, 15, 20, 25, 30, 35, 40, 45, 50]
+breaks = [10, 20, 30, 40, 50]
 d = {}
 d["db"] = db;
 d["table_e"] = table_e

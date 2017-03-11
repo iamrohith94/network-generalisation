@@ -35,32 +35,34 @@ d['betweenness_values'] = [int(x[0]) for x in get_selected_columns(d) if x[0] > 
 s = sorted(d['betweenness_values'])
 #s.sort(ascending = False)
 
-print "Series: ", s
+#print "Series: ", s
 
 #Generating intervals of different length
-n_percentile = [10, 15, 20, 25, 30, 35, 40, 45, 50]
+n_percentile = [10, 20, 30, 40, 50]
 for n in n_percentile:
-	temp = n
+	temp = 100
 	bucket_size = n
 	intervals = []
 	d["count_column"]="betweenness"
 	d['level_column'] = "level_"+str(bucket_size);
+	d['promoted_level_column'] = "promoted_level_"+str(bucket_size);
 	print "Working on bucket_size of ", bucket_size
 
 	#print "bucket_size: ", bucket_size
 
-	while temp <= 100:
+	while temp >= 0:
+		#print "temp: ",temp
 		#value = math.ceil(s.quantile(temp))
 		value = math.ceil(np.percentile(s, temp))
 		#print value
 		intervals.append(value)
-		temp = temp + n
+		temp = temp - n
 
 	d['num_levels'] = len(intervals)
 
 
 	#Reversing the intervals, descending order
-	intervals.reverse()
+	#intervals.reverse()
 
 
 	# Adding the corresponding level column to the tables
@@ -79,10 +81,10 @@ for n in n_percentile:
 	d['query'] = "ALTER TABLE "+table_v+" \
 		ADD COLUMN promoted_"+d['level_column']+" BIGINT DEFAULT "+str(d['num_levels']+1)
 	run_query(d);
-
+	
 	intervals.append(0);
-
-	intervals.insert(0, max(d['betweenness_values'])+1)
+	intervals[0] = intervals[0]+1
+	#intervals.insert(0, max(d['betweenness_values'])+1)
 	print "Intervals ", intervals
 
 	

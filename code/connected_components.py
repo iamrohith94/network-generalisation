@@ -13,22 +13,29 @@ def connect_components(parameters):
 	conn = parameters['conn']
 	super_node_map = {}
 	G = edge_table_to_graph_level(parameters);
-	parameters['table'] = parameters['table_v']
-	parameters['column'] = "id";
-	nodes = get_column_values(parameters);
-	for node in nodes:
-		super_node_map[node] = [node];
-	edge_additions = make_strongly_connected(G, super_node_map);
+	#print "Initial Skeleton: "
+	#print G.edges()
+	#parameters['table'] = parameters['table_v']
+	#parameters['column'] = "id";
+	#nodes = get_column_values(parameters);
+	for node in G.nodes():
+		super_node_map[node] = [node]
+	edge_additions = make_strongly_connected(G, super_node_map)
 	return edge_additions
 	
 
 def make_strongly_connected(G, super_node_map):
-	node_to_component = {};
+	node_to_component = {}
 	edge_additions = []
 	temp_super_node_map = {}
-	initial_connected_components =  sorted(nx.strongly_connected_components(G), key = len, reverse = True);
-	initial_num_connected_comp = len(initial_connected_components);
+	initial_connected_components =  sorted(nx.strongly_connected_components(G), key = len, reverse = True)
+	initial_num_connected_comp = len(initial_connected_components)
 	
+
+	# Return an empty list if it is already strongly connected
+	if initial_num_connected_comp == 1:
+		return edge_additions
+
 	"""
 	#print "Super Node map: "
 	for super_node in super_node_map.keys():
@@ -42,16 +49,13 @@ def make_strongly_connected(G, super_node_map):
 	"""
 
 	for i in xrange(initial_num_connected_comp):
-		temp_super_node_map[i] = [v for x in initial_connected_components[i] for v in super_node_map[x]]
-
-	if initial_num_connected_comp == 1:
-		return edge_additions	
+		temp_super_node_map[i] = [v for x in initial_connected_components[i] for v in super_node_map[x]]	
 
 	else:
 		# Mapping every node to its connected component
 		for i in xrange(initial_num_connected_comp):
 			for v in initial_connected_components[i]:
-				node_to_component[v] = i;
+				node_to_component[v] = i
 
 		DAG = nx.DiGraph();
 
@@ -60,7 +64,7 @@ def make_strongly_connected(G, super_node_map):
 		# Generating the DAG with every strongly connected component as node
 		#Adding nodes
 		for key in node_to_component.keys():
-			DAG.add_node(node_to_component[key]);
+			DAG.add_node(node_to_component[key])
 		#Adding edges
 		for edge in G.edges():
 			DAG_src = node_to_component[edge[0]]
@@ -89,7 +93,7 @@ def make_strongly_connected(G, super_node_map):
 				n = 0
 				#break;
 			elif DAG.in_degree(v) == 0 or DAG.out_degree(v) == 0:
-				n = nx.all_neighbors(DAG, v).next();
+				n = nx.all_neighbors(DAG, v).next()
 				# add an incoming edge from one of its neighbors
 				if DAG.in_degree(v) == 0:
 					add_inc = True
@@ -99,30 +103,30 @@ def make_strongly_connected(G, super_node_map):
 				#break;
 
 			else:
-				continue;
+				continue
 
 			poi = temp_super_node_map[v][0];
-			connect_poi = temp_super_node_map[n][0];
+			connect_poi = temp_super_node_map[n][0]
 			#add necessary edges between n and v in DAG
 			#add necessary edges between poi and connect_poi in G
 			if add_inc == True:
 				#print "DAG connection between " + str(n) + " and " + str(v);
 				#print "G connection between " + str(connect_poi) + " and " + str(poi);
 				DAG.add_edge(n, v);
-				edge_additions.append((connect_poi, poi));
+				edge_additions.append((connect_poi, poi))
 			if add_out == True:
 				#print "DAG connection between " + str(v) + " and " + str(n);
 				#print "G connection between " + str(connect_poi) + " and " + str(poi);
 				DAG.add_edge(v, n);
-				edge_additions.append((poi, connect_poi));
+				edge_additions.append((poi, connect_poi))
 
 		#deleting the unwanted variables
 		del super_node_map
 		del node_to_component
 		del initial_connected_components
 
-		additions = make_strongly_connected(DAG, temp_super_node_map);
+		additions = make_strongly_connected(DAG, temp_super_node_map)
 		for addition in additions:
-			edge_additions.append(addition);
+			edge_additions.append(addition)
 
-		return edge_additions;
+		return edge_additions

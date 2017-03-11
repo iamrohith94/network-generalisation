@@ -58,16 +58,19 @@ def update_with_intervals(parameters):
 	"""
 	conn = parameters['conn']
 	cur = conn.cursor()
-	query = "UPDATE %s SET %s = %s WHERE %s >= %s AND %s < %s"
+	query = "UPDATE %s SET %s = %s, %s = %s WHERE %s >= %s AND %s < %s"
 	curr_level = 1
 	for start in xrange(0, len(parameters['intervals'])-1):
 		end = start + 1
-		print start, end
+		#print start, end
 		if parameters['intervals'][start] != parameters['intervals'][end]:
-			cur.execute(query, (AsIs(parameters['table_e']), AsIs(parameters['level_column']), 
-				curr_level, AsIs(parameters['count_column']), parameters['intervals'][end],
+			cur.execute(query, (AsIs(parameters['table_e']), 
+				AsIs(parameters['level_column']), curr_level, 
+				AsIs(parameters['promoted_level_column']), curr_level,
+				AsIs(parameters['count_column']), parameters['intervals'][end],
 				AsIs(parameters['count_column']), parameters['intervals'][start], ))
-			curr_level = curr_level + 1
+			if cur.rowcount > 0:
+					curr_level = curr_level + 1
 	populate_vertex_levels(parameters)
 
 
