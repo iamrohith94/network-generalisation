@@ -62,6 +62,20 @@ def update_column(parameters):
     for eid in count.keys():
         cur.execute(query, (AsIs(parameters['table']), AsIs(parameters['column']), count[eid], eid));
     conn.commit()
+
+def generate_random_pairs(parameters):
+    db = parameters['db']
+    conn = parameters['conn']    
+    cur = conn.cursor()
+    random_query = "SELECT t1.id, t2.id \
+    FROM %s as t1, %s AS t2 \
+    ORDER BY random() LIMIT %s;"
+    cur.execute(random_query, (AsIs(parameters['table_v']), AsIs(parameters['table_v']), parameters['num_pairs'],));
+    rows = cur.fetchall();
+    pairs = [];
+    for row in rows:
+        pairs.append((row[0], row[1]));
+    return pairs
     
 def generate_vertex_count(parameters):
     f = parameters['fraction'];
