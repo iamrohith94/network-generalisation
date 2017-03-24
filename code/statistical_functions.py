@@ -70,8 +70,22 @@ def update_with_intervals(parameters):
 				AsIs(parameters['count_column']), parameters['intervals'][end],
 				AsIs(parameters['count_column']), parameters['intervals'][start], ))
 			if cur.rowcount > 0:
-					curr_level = curr_level + 1
+				curr_level = curr_level + 1
 	populate_vertex_levels(parameters)
 
+	"""
+	Update those edges where source vertex and target vertex are of level 1 but
+	edge is not level 1
+	"""
+	skeleton_level = 1
+	u_query = "UPDATE e SET e.%s = %s \
+	FROM %s AS e, %s AS v1, %s AS v2 \
+	WHERE v1.id = e.source AND v2.id = e.target AND v1.%s = %s AND v2.%s = %s"
+
+	cur.execute(u_query, (AsIs(parameters['promoted_level_column']), skeleton_level, 
+		AsIs(parameters['table_e']), AsIs(parameters['table_v']), AsIs(parameters['table_v']), 
+		AsIs(parameters['promoted_level_column']), skeleton_level, 
+		AsIs(parameters['promoted_level_column']), skeleton_level))
+	conn.commit()
 
 

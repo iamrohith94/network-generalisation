@@ -80,21 +80,21 @@ class ShortestPath:
 	def get_generalised_path(self, source, target, level_column):
 		source_to_skeleton = self.astar_path(source, target, level_column)
 		self.update_path_cost(source_to_skeleton)
-		"""
+		
 		print "Source to skeleton: "+str(len(source_to_skeleton)-1)
 		print source_to_skeleton
-		"""
+		
 		skeleton_to_target = self.astar_path(target, source_to_skeleton.get_last_node(), level_column, True)
 		self.update_path_cost(skeleton_to_target)
-		"""
+		
 		print "Skeleton to target: "+str(len(skeleton_to_target)-1)
 		print skeleton_to_target
-		"""
+		
 		on_skeleton = self.get_path_on_skeleton(source_to_skeleton.get_last_node(), skeleton_to_target.get_start_node(), level_column)
-		"""
+		
 		print "On Skeleton: "+str(len(on_skeleton))
 		print on_skeleton
-		"""
+		
 		final_path = Path()
 		final_path.add_path(source_to_skeleton)
 		final_path.add_path(on_skeleton)
@@ -169,12 +169,13 @@ class ShortestPath:
 		while queue:
 			#print "queue", queue
 			level, _, dist_from_source, currnode, parent_node, parent_edge = pop(queue)
-			"""
+			
 			print "Exploring Node:"
 			print "node: "+str(currnode)
+			print "level: "+str(level)
 			print "parent_node: "+str(parent_node)
 			print "parent_edge: "+str(parent_edge)
-			"""
+			
 			#if the currnode is target we backtrack using the parents and extract the path
 			if currnode == target or self.get_node_level(currnode, level_column) == self.target_level:
 				if reverse == True:
