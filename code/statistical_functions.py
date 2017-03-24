@@ -78,12 +78,13 @@ def update_with_intervals(parameters):
 	edge is not level 1
 	"""
 	skeleton_level = 1
-	u_query = "UPDATE e SET e.%s = %s \
-	FROM %s AS e, %s AS v1, %s AS v2 \
-	WHERE v1.id = e.source AND v2.id = e.target AND v1.%s = %s AND v2.%s = %s"
+	u_query = "UPDATE %s SET %s = %s \
+	FROM %s AS v1, %s AS v2 \
+	WHERE v1.id = source AND v2.id = target AND v1.%s = %s AND v2.%s = %s"
 
-	cur.execute(u_query, (AsIs(parameters['promoted_level_column']), skeleton_level, 
-		AsIs(parameters['table_e']), AsIs(parameters['table_v']), AsIs(parameters['table_v']), 
+	cur.execute(u_query, (AsIs(parameters['table_e']),
+		AsIs(parameters['promoted_level_column']), skeleton_level, 
+		AsIs(parameters['table_v']), AsIs(parameters['table_v']), 
 		AsIs(parameters['promoted_level_column']), skeleton_level, 
 		AsIs(parameters['promoted_level_column']), skeleton_level))
 	conn.commit()
