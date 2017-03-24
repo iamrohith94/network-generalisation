@@ -33,6 +33,18 @@ class Path:
 			s.add(entry['edge']);
 		return s;
 
+	def get_edge_set(self):
+		s = set();
+		for entry in self.path:
+			s.add(entry['edge']);
+		return s;
+
+	def get_path_cost(self):
+		l = 0.00000;
+		for entry in self.path:
+			l = l + entry['cost'];
+		return l;
+
 	def get_node_set(p):
 		s = set();
 		for entry in p:
