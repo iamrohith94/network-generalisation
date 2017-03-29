@@ -21,7 +21,7 @@ num_vertices = get_count(d);
 
 # Generating vertex pairs
 print "Generating vertex pairs...."
-d['num_pairs'] = 400;
+d['num_pairs'] = 10;
 d['level'] = 1;
 
 pairs = generate_random_pairs(d);
@@ -50,6 +50,7 @@ for p in breaks:
 		if len(orig_path) == 0:
 			continue;
 		gen_path = sp.get_generalised_path(d['source'], d['target'], d['level_column']);
+		#gen_path = sp.astar_path(d['source'], d['target'], d['level_column']);
 		gen_path_len = gen_path.get_path_cost();
 		orig_path_len = orig_path.get_path_cost();
 		dist_diff.append(gen_path_len-orig_path_len);
@@ -59,7 +60,10 @@ for p in breaks:
 	plt.ylabel('Difference in dist');
 	print "num_samples: "+str(len(actual_dist));
 	#plt.title(level_column+"\n equal_paths: "+str(equal)+"\n non_equal_paths: "+str(non_equal));
+	#print "Actual Distances: ", actual_dist
+	#print "Diff Distances: ", dist_diff
 	plt.plot(actual_dist, dist_diff, 'ro')
+
 	plt.axis([0, 0.01, 0, 0.01])
 	plt.savefig('../images/result_level_'+str(p)+'.png',facecolor='white')
 	plt.clf();
