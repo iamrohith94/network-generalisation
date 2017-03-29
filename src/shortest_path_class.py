@@ -1,6 +1,7 @@
 import psycopg2
 import collections
 from path_class import *
+import time
 from psycopg2.extensions import AsIs
 from heapq import heappush, heappop
 class ShortestPath:
@@ -12,6 +13,12 @@ class ShortestPath:
 	vertex_table = "cleaned_ways_vertices_pgr"
 	edge_table = "cleaned_ways"
 	target_level = 1
+	time_source_to_skeleton = 0.00
+	time_skeleton_to_target = 0.00
+	time_on_skeleton = 0.00
+	time_gen_path = 0.00
+	time_original_path = 0.00
+
 	def __init__(self, db):
 		self.db = db
 		self.conn = psycopg2.connect(database=db, user=self.user, password=self.password, host=self.host, port=self.port)
@@ -78,25 +85,35 @@ class ShortestPath:
 		return path
 
 	def get_generalised_path(self, source, target, level_column):
+		print source, target
+		print level_column
+		self.time_source_to_skeleton = time.time()
 		source_to_skeleton = self.astar_path(source, target, level_column)
+		self.time_source_to_skeleton = time.time() - self.time_source_to_skeleton
 		print "Source node on skeleton: ", source_to_skeleton.get_last_node()
 		self.update_path_cost(source_to_skeleton)
-		"""
+		
 		print "Source to skeleton: "+str(len(source_to_skeleton)-1)
-		print source_to_skeleton
-		"""
+		print "Path: ", source_to_skeleton
+		
+		self.time_skeleton_to_target = time.time()
 		skeleton_to_target = self.astar_path(target, source_to_skeleton.get_last_node(), level_column, True)
-		self.update_path_cost(skeleton_to_target)
+		self.time_skeleton_to_target = time.time() - self.time_skeleton_to_target
 		print "Target node on skeleton: ", skeleton_to_target.get_start_node()
+		self.update_path_cost(skeleton_to_target)
 		"""
 		print "Skeleton to target: "+str(len(skeleton_to_target)-1)
 		print skeleton_to_target
 		"""
+		self.time_on_skeleton = time.time()
 		on_skeleton = self.get_path_on_skeleton(source_to_skeleton.get_last_node(), skeleton_to_target.get_start_node(), level_column)
+		self.time_on_skeleton = time.time() - self.time_on_skeleton
 		"""
 		print "On Skeleton: "+str(len(on_skeleton))
 		print on_skeleton
 		"""
+		self.time_gen_path = self.time_source_to_skeleton+self.time_on_skeleton+self.time_skeleton_to_target
+		
 		final_path = Path()
 		final_path.add_path(source_to_skeleton)
 		final_path.add_path(on_skeleton)
@@ -107,13 +124,16 @@ class ShortestPath:
 
 		return final_path
 
+
 	def get_original_path(self, source, target):
 		path = Path()
 		inner_query = "SELECT id, source, target, cost, reverse_cost \
 		FROM "+self.edge_table
 		query = "SELECT node, edge, cost FROM pgr_dijkstra(%s, %s, %s)"
+		self.time_original_path = time.time()
 		self.cur.execute(query, (inner_query, source, target))
 		rows = self.cur.fetchall()
+		self.time_original_path = time.time() - self.time_original_path
 		for row in rows:
 			path.add_entry({'node': row[0], 'edge': row[1], 'cost': row[2]})
 		return path
@@ -171,13 +191,13 @@ class ShortestPath:
 		while queue:
 			#print "queue", queue
 			level, _, dist_from_source, currnode, parent_node, parent_edge = pop(queue)
-			"""
+			
 			print "Exploring Node:"
 			print "node: "+str(currnode)
 			print "level: "+str(level)
 			print "parent_node: "+str(parent_node)
 			print "parent_edge: "+str(parent_edge)
-			"""
+			
 			#if the currnode is target we backtrack using the parents and extract the path
 			if currnode == target or self.get_node_level(currnode, level_column) == self.target_level:
 				if reverse == True:
