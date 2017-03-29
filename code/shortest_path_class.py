@@ -119,6 +119,7 @@ class ShortestPath:
 		WHERE v1.id = %s AND v2.id = %s";
 		self.cur.execute(query, (AsIs(self.vertex_table), AsIs(self.vertex_table), source, target));
 		rows = self.cur.fetchall();
+		dist = 0.0
 		for row in rows:
 			dist = row[0];
 		return dist;
@@ -164,7 +165,7 @@ class ShortestPath:
 		push = heappush
    		pop = heappop
 		while queue:
-			level, _, dist_from_source, currnode, parent_node, parent_edge = pop(queue);
+			level, dist_from_source, _, currnode, parent_node, parent_edge = pop(queue);
 			"""
 			print "Exploring Node:";
 			print "node: "+str(currnode);
@@ -217,7 +218,7 @@ class ShortestPath:
 					h = heuristic(neighbor, target);
 				nodes_in_queue[neighbor] = ncost, h;
 				#print neighbor
-				push(queue, (self.get_node_level(neighbor, level_column), ncost+h, ncost, neighbor, currnode, edge_id));
+				push(queue, (self.get_node_level(neighbor, level_column), ncost, ncost+h, neighbor, currnode, edge_id));
 
 		return path;
 

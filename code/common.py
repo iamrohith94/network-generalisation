@@ -70,11 +70,14 @@ def generate_random_pairs(parameters):
     random_query = "SELECT t1.id, t2.id \
     FROM %s as t1, %s AS t2 \
     ORDER BY random() LIMIT %s;"
+
+    # random_query = "select v1.id, v2.id,ST_DISTANCE(v1.the_geom,v2.the_geom)*111*1000 from %s as v1, %s as v2  \
+    # where ST_DISTANCE(v1.the_geom,v2.the_geom)*111*1000 > 2000 and ST_DISTANCE(v1.the_geom,v2.the_geom)*111*1000 < 4000 order by  ST_DISTANCE(v1.the_geom,v2.the_geom)*111*1000 desc limit %s"
     cur.execute(random_query, (AsIs(parameters['table_v']), AsIs(parameters['table_v']), parameters['num_pairs'],));
     rows = cur.fetchall();
     pairs = [];
     for row in rows:
-        pairs.append((row[0], row[1]));
+        pairs.append((row[0], row[1]));    
     return pairs
     
 def generate_vertex_count(parameters):
