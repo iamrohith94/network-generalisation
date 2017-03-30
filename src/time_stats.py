@@ -18,7 +18,7 @@ cur = conn.cursor()
 
 # Generating vertexx pairs
 print "Generating vertex pairs...."
-d['num_pairs'] = 100
+d['num_pairs'] = 1000
 pairs = generate_random_pairs(d) 
 levels = [10, 20, 30, 40, 50]
 for pair in pairs:
@@ -33,6 +33,6 @@ for pair in pairs:
 		gen_dist = sp.get_generalised_path(pair[0], pair[1], "promoted_level_" + str(level)).get_path_cost()*111*1000
 		gen_time = sp.time_gen_path
 		#print "Path: ", g_path
-		cur.execute(path_query, (AsIs("time_stats"), pair[0], pair[1], level, orig_time, gen_time,orig_dist, gen_dist))
+		cur.execute(path_query, (AsIs("time_stats"), pair[0], pair[1], level, orig_time, gen_time, orig_dist, gen_dist))
 
 conn.commit()
