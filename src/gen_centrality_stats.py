@@ -16,7 +16,7 @@ table_v = 'cleaned_ways_vertices_pgr'
 
 d = {}
 d["db"] = db;
-d["fraction"] = 0.1
+d["fraction"] = 1
 d["table_e"] = table_e
 d["table_v"] = table_v
 d["column"] = "id";
@@ -30,7 +30,7 @@ d['table'] = "contracted_ways_vertices_pgr";
 d['num_vertices'] = get_count(d);
 d['table'] = "contracted_ways";
 d['num_edges'] = get_count(d);
-d['num_pairs'] = long(d['fraction']*d['num_vertices']*d['num_vertices']);
+d['num_pairs'] = long(d['fraction']*d['num_vertices']);
 
 print "Number of vertex pairs: ", d['num_pairs']
 
