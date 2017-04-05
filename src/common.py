@@ -63,7 +63,7 @@ def update_column(parameters):
         cur.execute(query, (AsIs(parameters['table']), AsIs(parameters['column']), count[eid], eid));
     conn.commit()
 
-def generate_random_pairs(parameters):
+def generate_random_pairs_from_table(parameters):
     db = parameters['db']
     conn = parameters['conn']    
     cur = conn.cursor()
@@ -75,6 +75,27 @@ def generate_random_pairs(parameters):
     pairs = [];
     for row in rows:
         pairs.append((row[0], row[1]));
+    return pairs
+
+def generate_random_pairs(parameters):
+    db = parameters['db']
+    conn = parameters['conn']    
+    cur = conn.cursor()
+    random_query = "SELECT id FROM %s ;"
+    cur.execute(random_query, (AsIs(parameters['table_v']), ));
+    rows = cur.fetchall()
+    vertices = []
+    for row in rows:
+        vertices.append(row[0])
+    i = 0
+    pairs = []
+    while i < parameters['num_pairs']:
+        i1 = random.randint(0, parameters['num_pairs'])
+        i2 = random.randint(0, parameters['num_pairs'])
+        if i1 == i2:
+            continue
+        i += 1
+        pairs.append((vertices[i1], vertices[i2]))
     return pairs
 
 def generate_random_pairs_dist(parameters):
@@ -103,12 +124,12 @@ def get_distance(parameters):
         query = "SELECT ST_Distance(t1.the_geom, t2.the_geom)*111 \
         FROM %s as t1, %s AS t2 \
         WHERE t1.id != t2.id \
-        ORDER BY ST_Distance(t1.the_geom, t2.the_geom) DESC LIMIT 1"
+        ORDER BY ST_Distance(t1.the_geom, t2.the_geom) DESC LIMIT 1;"
     else:
         query = "SELECT ST_Distance(t1.the_geom, t2.the_geom)*111 \
         FROM %s as t1, %s AS t2 \
         WHERE t1.id != t2.id \
-        ORDER BY ST_Distance(t1.the_geom, t2.the_geom) LIMIT 1"
+        ORDER BY ST_Distance(t1.the_geom, t2.the_geom) LIMIT 1;"
     cur.execute(query, (AsIs(parameters['table_v']), AsIs(parameters['table_v']), ));
     rows = cur.fetchall()
     dist = 0
