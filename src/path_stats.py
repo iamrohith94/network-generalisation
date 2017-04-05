@@ -21,7 +21,7 @@ non_equal = 0;
 
 # Generating vertexx pairs
 print "Generating vertex pairs...."
-d['num_pairs'] = 2000;
+d['num_pairs'] = 10;
 actual_path_costs = [];
 diff_cost = [];
 

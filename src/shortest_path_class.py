@@ -65,8 +65,8 @@ class ShortestPath:
 			visited.append(temp_node_id) 
 			temp_node_id, entry = self.get_next_node(temp_node_id, target_node_id, level_column, visited, forward) 
 			path.add_entry(entry) 
-			print entry 
-			print temp_node_id 
+			#print entry 
+			#print temp_node_id 
 		if forward:
 			path.add_entry({'node': temp_node_id, 'edge': -1, 'cost': 0.0000}) 
 		else:
@@ -91,24 +91,26 @@ class ShortestPath:
 		self.time_source_to_skeleton = time.time() - self.time_source_to_skeleton
 
 		self.update_path_cost(source_to_skeleton)
+		"""
 		print "Source to skeleton: "+str(len(source_to_skeleton)-1)
 		print source_to_skeleton 
-		
+		"""
 		self.time_skeleton_to_target = time.time()
 		skeleton_to_target = self.astar_path(target, source_to_skeleton.get_last_node(), level_column, True) 
 		self.time_skeleton_to_target = time.time() - self.time_skeleton_to_target
 		
 		self.update_path_cost(skeleton_to_target)
+		"""
 		print "Skeleton to target: "+str(len(skeleton_to_target)-1)
 		print skeleton_to_target 
-
+		"""
 		self.time_on_skeleton = time.time()
 		on_skeleton = self.get_path_on_skeleton(source_to_skeleton.get_last_node(), skeleton_to_target.get_start_node(), level_column) 
 		self.time_on_skeleton = time.time() - self.time_on_skeleton
-
+		"""
 		print "On Skeleton: "+str(len(on_skeleton))
 		print on_skeleton 
-		
+		"""
 		final_path = Path()
 		final_path.add_path(source_to_skeleton)
 		final_path.add_path(on_skeleton)

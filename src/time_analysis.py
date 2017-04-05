@@ -19,7 +19,7 @@ fig,ax = plt.subplots()
 cur = conn.cursor()
 s = 121
  
-query = "SELECT source,target,COUNT(*)  FROM time_stats where actual_distance > 2000 GROUP BY source,target limit 30"
+query = "SELECT source,target,COUNT(*)  FROM time_stats where actual_distance > 2000 and actual_distance < 5000 GROUP BY source,target limit 30"
 cur.execute(query)
 rows = cur.fetchall()
 for row in rows:
@@ -34,9 +34,9 @@ for row in rows:
 	c = numpy.random.rand(3,1)
 	ax.scatter(distance, level, color= c)
 	ax.plot(distance, level, color = c)
-plt.xlabel(' Time')
+plt.xlabel('Time')
 plt.ylabel('level')
-plt.title("Gachibwoli"+"\n : "+str(len(rows)) +" sd pairs "  )
+plt.title("Chandigarh"+"\n : "+str(len(rows)) +" sd pairs "  )
 # plt.axis([3000,7000 , 0, 120])
 plt.show()
 

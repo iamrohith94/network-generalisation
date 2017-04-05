@@ -16,7 +16,7 @@ table_v = 'cleaned_ways_vertices_pgr'
 
 d = {}
 d["db"] = db;
-d["fraction"] = 1
+d["fraction"] = 2
 d["table_e"] = table_e
 d["table_v"] = table_v
 d["column"] = "id";

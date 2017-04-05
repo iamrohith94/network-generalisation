@@ -76,7 +76,46 @@ def generate_random_pairs(parameters):
     for row in rows:
         pairs.append((row[0], row[1]));
     return pairs
-    
+
+def generate_random_pairs_dist(parameters):
+    conn = parameters['conn']   
+    cur = conn.cursor()
+    start, end = parameters['range']
+    random_query = "SELECT t1.id, t2.id \
+    FROM %s as t1, %s AS t2 \
+    WHERE ST_Distance(t1.the_geom, t2.the_geom)*111 >= %s \
+    AND ST_Distance(t1.the_geom, t2.the_geom)*111 <= %s\
+    AND t1.id != t2.id\
+    ORDER BY random() LIMIT %s;"
+    cur.execute(random_query, (AsIs(parameters['table_v']), AsIs(parameters['table_v']), 
+        start, end, parameters['num_pairs'],));
+    rows = cur.fetchall()
+    pairs = [];
+    for row in rows:
+        pairs.append((row[0], row[1]))
+    return pairs
+
+def get_distance(parameters):
+    """Returns distance in kms"""
+    conn = parameters['conn']
+    cur = conn.cursor()
+    if parameters['is_max']:
+        query = "SELECT ST_Distance(t1.the_geom, t2.the_geom)*111 \
+        FROM %s as t1, %s AS t2 \
+        WHERE t1.id != t2.id \
+        ORDER BY ST_Distance(t1.the_geom, t2.the_geom) DESC LIMIT 1"
+    else:
+        query = "SELECT ST_Distance(t1.the_geom, t2.the_geom)*111 \
+        FROM %s as t1, %s AS t2 \
+        WHERE t1.id != t2.id \
+        ORDER BY ST_Distance(t1.the_geom, t2.the_geom) LIMIT 1"
+    cur.execute(query, (AsIs(parameters['table_v']), AsIs(parameters['table_v']), ));
+    rows = cur.fetchall()
+    dist = 0
+    for row in rows:
+        dist = row[0]
+    return dist
+
 def generate_vertex_count(parameters):
     f = parameters['fraction'];
     db = parameters['db']

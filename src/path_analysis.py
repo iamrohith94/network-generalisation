@@ -19,7 +19,7 @@ fig,ax = plt.subplots()
 cur = conn.cursor()
 s = 121
  
-query = "SELECT source,target,COUNT(*)  FROM paths where actual_distance > 2000 GROUP BY source,target limit 30"
+query = "SELECT source,target,COUNT(*)  FROM paths where actual_distance > 20000 GROUP BY source,target"
 cur.execute(query)
 rows = cur.fetchall()
 for row in rows:
@@ -36,7 +36,7 @@ for row in rows:
 	ax.plot(distance, level, color = c)
 plt.xlabel(' Distance')
 plt.ylabel('level')
-plt.title("Gachibwoli"+"\n : "+str(len(rows)) +" sd pairs "  )
+plt.title("Chandigarh"+"\n : "+str(len(rows)) +" sd pairs "  )
 # plt.axis([3000,7000 , 0, 120])
 plt.show()
 
