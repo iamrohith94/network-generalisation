@@ -21,16 +21,19 @@ non_equal = 0;
 
 # Generating vertexx pairs
 print "Generating vertex pairs...."
-d['num_pairs'] = 1000;
-actual_path_costs = [];
-diff_cost = [];
+d['num_pairs'] = 100
+actual_path_costs = []
+diff_cost = []
+random_query = "SELECT id FROM %s ;"
+cur.execute(random_query, (AsIs(d['table_v']), ));
+rows = cur.fetchall()
 
-pairs = generate_random_pairs(d);
 levels = [10,20,30,40,50]
 count = 0
-for pair in pairs:
-	count += 1
-	if count % 100 == 0:
+i = 0
+while i < d['num_pairs']:
+	pair = [random.choice(rows), random.choice(rows)]
+	if count % 10 == 0:
 		print count
 	query = "INSERT INTO %s(source, target, level, actual_distance, contracted_distance) VALUES(%s, %s, %s, %s, %s)"
 	geom_query = "UPDATE %s SET %s = (SELECT ST_UNION(edge_table.the_geom) FROM %s AS edge_table WHERE edge_table.id = ANY(%s)) \
@@ -55,5 +58,6 @@ for pair in pairs:
 		cur.execute(query, (AsIs("paths"), pair[0], pair[1], level, orig_dist, g_dist))
 		#print list(g_edges)
 		cur.execute(geom_query, (AsIs("paths"), AsIs("the_geom"), AsIs(table_e), list(g_edges), pair[0], pair[1], level))
-
+	i += 1
+	count += 1
 conn.commit()

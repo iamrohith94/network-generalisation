@@ -137,6 +137,21 @@ def get_distance(parameters):
         dist = row[0]
     return dist
 
+def get_actual_distance(parameters):
+    """Returns distance in kms"""
+    conn = parameters['conn']
+    cur = conn.cursor()
+    if parameters['is_max']:
+        query = "SELECT MAX(actual_distance/1000) FROM paths;"
+    else:
+        query = "SELECT MIN(actual_distance/1000) FROM paths;"
+    cur.execute(query);
+    rows = cur.fetchall()
+    dist = 0
+    for row in rows:
+        dist = row[0]
+    return dist
+
 def generate_vertex_count(parameters):
     f = parameters['fraction'];
     db = parameters['db']
