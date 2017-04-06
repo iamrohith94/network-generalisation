@@ -21,7 +21,7 @@ non_equal = 0;
 
 # Generating vertexx pairs
 print "Generating vertex pairs...."
-d['num_pairs'] = 100
+d['num_pairs'] = 1000
 actual_path_costs = []
 diff_cost = []
 random_query = "SELECT id FROM %s ;"
