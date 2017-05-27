@@ -6,7 +6,7 @@ from heapq import heappush, heappop
 import time
 class ShortestPath:
 	'Class for extracting shortest path'
-	user = 'postgres'
+	user = 'rohithreddy'
 	password = "postgres"
 	host="127.0.0.1"
 	port="5432"
@@ -73,10 +73,19 @@ class ShortestPath:
 			path.get_path().reverse()
 		return path
 
+	def get_connected_comp_path(self, source, target, level):
+		path = Path() 
+		query = "SELECT node, edge, cost FROM pgr_conn_compQuery(%s, %s, %s, %s, %s)" 
+		self.cur.execute(query, (self.edge_table, self.vertex_table, source, target, level, ))
+		rows = self.cur.fetchall()
+		for row in rows:
+			path.add_entry({'node': row[0], 'edge': row[1], 'cost': row[2]})
+		return path
+
 	def get_path_on_skeleton(self, source, target, level_column):
 		path = Path()
-		inner_query = "SELECT id, source, target, cost, reverse_cost \
-		FROM "+self.edge_table+" WHERE "+level_column+" <= "+str(self.target_level)
+		inner_query = "SELECT id, source, target, cost, reverse_cost " \
+		"FROM "+self.edge_table+" WHERE "+level_column+" <= "+str(self.target_level)
 		query = "SELECT node, edge, cost FROM pgr_dijkstra(%s, %s, %s)"
 		self.cur.execute(query, (inner_query, source, target))
 		rows = self.cur.fetchall()
@@ -123,8 +132,8 @@ class ShortestPath:
 
 	def get_original_path(self, source, target):
 		path = Path() 
-		inner_query = "SELECT id, source, target, cost, reverse_cost \
-		FROM "+self.edge_table 
+		inner_query = "SELECT id, source, target, cost, reverse_cost "\
+		"FROM "+self.edge_table 
 		query = "SELECT node, edge, cost FROM pgr_dijkstra(%s, %s, %s)" 
 		self.time_original_path = time.time()
 		self.cur.execute(query, (inner_query, source, target)) 
@@ -136,8 +145,8 @@ class ShortestPath:
 
 	def euclidean_distance(self, source, target):
 		#print source, target 
-		query = "SELECT ST_Distance(v1.the_geom, v2.the_geom) FROM %s AS v1, %s AS v2 \
-		WHERE v1.id = %s AND v2.id = %s" 
+		query = "SELECT ST_Distance(v1.the_geom, v2.the_geom) FROM %s AS v1, %s AS v2 "\
+		"WHERE v1.id = %s AND v2.id = %s" 
 		self.cur.execute(query, (AsIs(self.vertex_table), AsIs(self.vertex_table), source, target)) 
 		rows = self.cur.fetchall() 
 		dist = 0.0

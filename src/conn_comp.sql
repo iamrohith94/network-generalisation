@@ -30,11 +30,21 @@ BEGIN
     || ' WHERE id = ' || target;
     EXECUTE source_sql INTO cc_source;
     EXECUTE target_sql INTO cc_target;
+    IF cc_source = cc_target THEN
+        final_sql = 'SELECT id, source, target, cost, reverse_cost FROM '
+        || edge_table || ' WHERE comp_id_'|| level ||' = ' || cc_source;
+    ELSE 
+        final_sql = 'SELECT id, source, target, cost, reverse_cost FROM '
+        || edge_table || ' WHERE promoted_level_'|| level ||' = 1 OR comp_id_'|| level ||' = ' 
+        || cc_source || ' OR comp_id_'|| level ||' = ' || cc_target;
+    END IF;
+    /*
+    Including skeleton irrespective of whether the source and target are in the same connected component
     final_sql = 'SELECT id, source, target, cost, reverse_cost FROM '
-    || edge_table || ' WHERE promoted_level_'|| level ||' = 1 OR comp_id_'|| level ||' = ' 
-    || cc_source || ' OR comp_id_'|| level ||' = ' || cc_target;
-
+        || edge_table || ' WHERE promoted_level_'|| level ||' = 1 OR comp_id_'|| level ||' = ' 
+        || cc_source || ' OR comp_id_'|| level ||' = ' || cc_target;
+    */
     RETURN QUERY SELECT a.seq, a.node, a.edge, a.cost, a.agg_cost
-    FROM pgr_dijkstra(final_sql, source, target, directed, only_cost) AS a;
+    FROM pgr_dijkstra(final_sql, source, target, directed) AS a;
 END
 $body$ language plpgsql volatile;
