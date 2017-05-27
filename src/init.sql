@@ -33,7 +33,11 @@ CREATE TABLE paths(
 	target BIGINT,
 	level INT,
 	actual_distance DOUBLE PRECISION,
-	contracted_distance DOUBLE PRECISION
+	contracted_distance DOUBLE PRECISION,
+	original_graph_edges BIGINT,
+	original_graph_vertices BIGINT,
+	contracted_graph_edges BIGINT,
+	contracted_graph_vertices BIGINT
 );
 
 CREATE TABLE time_stats(

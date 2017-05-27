@@ -73,6 +73,7 @@ class ShortestPath:
 			path.get_path().reverse()
 		return path
 
+
 	def get_connected_comp_path(self, source, target, level):
 		path = Path() 
 		query = "SELECT node, edge, cost FROM pgr_conn_compQuery(%s, %s, %s, %s, %s)" 

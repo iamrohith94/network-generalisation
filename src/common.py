@@ -67,8 +67,8 @@ def generate_random_pairs_from_table(parameters):
     db = parameters['db']
     conn = parameters['conn']    
     cur = conn.cursor()
-    random_query = "SELECT t1.id, t2.id \
-    FROM %s as t1, %s AS t2 \
+    random_query = "SELECT t1.id, t2.id "\
+    "FROM %s as t1, %s AS t2 \
     ORDER BY random() LIMIT %s;"
     cur.execute(random_query, (AsIs(parameters['table_v']), AsIs(parameters['table_v']), parameters['num_pairs'],));
     rows = cur.fetchall();
@@ -102,8 +102,8 @@ def generate_random_pairs_dist(parameters):
     conn = parameters['conn']   
     cur = conn.cursor()
     start, end = parameters['range']
-    random_query = "SELECT t1.id, t2.id \
-    FROM %s as t1, %s AS t2 \
+    random_query = "SELECT t1.id, t2.id "\
+    "FROM %s as t1, %s AS t2 \
     WHERE ST_Distance(t1.the_geom, t2.the_geom)*111 >= %s \
     AND ST_Distance(t1.the_geom, t2.the_geom)*111 <= %s\
     AND t1.id != t2.id\
@@ -121,13 +121,13 @@ def get_distance(parameters):
     conn = parameters['conn']
     cur = conn.cursor()
     if parameters['is_max']:
-        query = "SELECT ST_Distance(t1.the_geom, t2.the_geom)*111 \
-        FROM %s as t1, %s AS t2 \
+        query = "SELECT ST_Distance(t1.the_geom, t2.the_geom)*111 "\
+        "FROM %s as t1, %s AS t2 \
         WHERE t1.id != t2.id \
         ORDER BY ST_Distance(t1.the_geom, t2.the_geom) DESC LIMIT 1;"
     else:
-        query = "SELECT ST_Distance(t1.the_geom, t2.the_geom)*111 \
-        FROM %s as t1, %s AS t2 \
+        query = "SELECT ST_Distance(t1.the_geom, t2.the_geom)*111 "\
+        "FROM %s as t1, %s AS t2 \
         WHERE t1.id != t2.id \
         ORDER BY ST_Distance(t1.the_geom, t2.the_geom) LIMIT 1;"
     cur.execute(query, (AsIs(parameters['table_v']), AsIs(parameters['table_v']), ));
@@ -168,11 +168,11 @@ def generate_vertex_count(parameters):
     for x in vertices:
         count[int(x)] = 0;
 
-    inner = 'SELECT id, source, target, cost, reverse_cost \
-    FROM '+parameters['table_e']+' WHERE is_contracted = FALSE';
+    inner = 'SELECT id, source, target, cost, reverse_cost ' \
+    ' FROM '+parameters['table_e']+' WHERE is_contracted = FALSE';
     dijkstra_query = "SELECT node from pgr_dijkstra(%s,%s,%s)";
-    random_query = "SELECT t1.id, t2.id \
-    FROM %s as t1, %s AS t2 \
+    random_query = "SELECT t1.id, t2.id "\
+    "FROM %s as t1, %s AS t2 \
     ORDER BY random() LIMIT %s;"
     cur.execute(random_query, (AsIs(parameters['table_v']), AsIs(parameters['table_v']), parameters['num_pairs'],));
     pairs = cur.fetchall();
@@ -217,16 +217,16 @@ def generate_edge_count(parameters):
         count[int(x)] = 0;
 
     #Inner query for dijkstra -> contracted graph is taken 
-    inner = 'SELECT id, source, target, cost, reverse_cost \
-    FROM '+parameters['contracted_table_e'];
+    inner = 'SELECT id, source, target, cost, reverse_cost '\
+    'FROM '+parameters['contracted_table_e'];
 
     
     dijkstra_query = "SELECT edge from pgr_dijkstra(%s, %s, %s)";
     
     #Fetches vertex pairs at random
-    random_query = "SELECT t1.id, t2.id \
-    FROM %s as t1, %s AS t2 \
-    ORDER BY random() LIMIT %s;"
+    random_query = 'SELECT t1.id, t2.id ' \
+    'FROM %s as t1, %s AS t2 \
+    ORDER BY random() LIMIT %s;'
     
     cur.execute(random_query, (AsIs(parameters['contracted_table_v']), AsIs(parameters['contracted_table_v']), parameters['num_pairs'],));
     pairs = cur.fetchall();
@@ -337,8 +337,8 @@ def populate_edge_levels(parameters):
     """
     conn = parameters['conn']
     cur = conn.cursor()
-    update_query = "UPDATE %s SET %s \
-        = %s, %s = %s WHERE id = ANY(%s)"
+    update_query = "UPDATE %s SET %s "\
+      "  = %s, %s = %s WHERE id = ANY(%s)"
     cur.execute(update_query, 
         (AsIs(parameters['table_e']), AsIs(parameters['level_column']), parameters['level'], 
              AsIs(parameters['promoted_level_column']), parameters['level'],
@@ -352,8 +352,8 @@ def populate_vertex_levels(parameters):
     """
     conn = parameters['conn']
     cur = conn.cursor()
-    update_query = "UPDATE %s SET %s = \
-    (SELECT MIN(e.%s) FROM %s AS e WHERE e.source = %s.id OR e.target = %s.id) \
+    update_query = "UPDATE %s SET %s = "\
+    "(SELECT MIN(e.%s) FROM %s AS e WHERE e.source = %s.id OR e.target = %s.id) \
     , %s = (SELECT MIN(e.%s) FROM %s AS e WHERE e.source = %s.id OR e.target = %s.id) \
     WHERE %s > (SELECT MIN(e.%s) FROM %s AS e WHERE e.source = %s.id OR e.target = %s.id)";
     cur.execute(update_query, 
@@ -367,6 +367,62 @@ def populate_vertex_levels(parameters):
         AsIs(parameters['level_column']), AsIs(parameters['table_e']),
         AsIs(parameters['table_v']), AsIs(parameters['table_v']), ));
     conn.commit();
+
+
+def get_graph_size(parameters):
+    conn = parameters['conn']
+    cur = conn.cursor()
+    e_count = 0
+    v_count = 0
+    query = "SELECT count(*) from %s";
+    cur.execute(query, (AsIs(parameters['table_e']), ))
+    rows = cur.fetchall()
+    for row in rows:
+        e_count = row[0]
+    cur.execute(query, (AsIs(parameters['table_v']), ))
+    rows = cur.fetchall()
+    for row in rows:
+        v_count = row[0]
+    return (e_count, v_count)
+
+def get_comp_size(parameters):
+    conn = parameters['conn']
+    comp_size_e = 0
+    comp_size_v = 0
+    comp_id = -1
+    cur = conn.cursor()
+    query = "SELECT comp_id_%s from %s WHERE id = %s";
+    cur.execute(query, (parameters['level'], AsIs(parameters['table_v']), parameters['vertex']))
+    rows = cur.fetchall()
+    for row in rows:
+        comp_id = row[0]
+    query = "SELECT count(*) from %s WHERE comp_id_%s = %s AND promoted_level_%s != 1";
+    cur.execute(query, (AsIs(parameters['table_e']), parameters['level'], comp_id, parameters['level']))
+    rows = cur.fetchall()
+    for row in rows:
+        comp_size_e = row[0]
+    cur.execute(query, (AsIs(parameters['table_v']), parameters['level'], comp_id, parameters['level']))
+    rows = cur.fetchall()
+    for row in rows:
+        comp_size_v = row[0]
+    return (comp_size_e, comp_size_v, comp_id)
+
+
+def get_skeleton_size_by_level(parameters):
+    conn = parameters['conn']
+    cur = conn.cursor()
+    e_count = 0
+    v_count = 0
+    query = "SELECT count(*) from %s WHERE promoted_level_%s <= %s";
+    cur.execute(query, (AsIs(parameters['table_e']), parameters['level'], 1))
+    rows = cur.fetchall()
+    for row in rows:
+        e_count = row[0]
+    cur.execute(query, (AsIs(parameters['table_v']), parameters['level'], 1))
+    rows = cur.fetchall()
+    for row in rows:
+        v_count = row[0]
+    return (e_count, v_count)
 
 
 def get_matching_node_count(parameters):
