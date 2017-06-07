@@ -7,7 +7,7 @@ d['db'] = sys.argv[1];
 table_e = "cleaned_ways"
 table_v = "cleaned_ways_vertices_pgr"
 d['table'] = table_e;
-conn = psycopg2.connect(database=d['db'], user="postgres", password="postgres", host="127.0.0.1", port="5432")
+conn = psycopg2.connect(database=d['db'], user="rohithreddy", password="postgres", host="127.0.0.1", port="5432")
 d['conn'] = conn
 
 """

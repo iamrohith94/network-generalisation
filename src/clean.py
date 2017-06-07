@@ -7,7 +7,7 @@ database = sys.argv[1];
 d['db'] = database;
 d['table_e'] = "ways";
 d['table_v'] = "ways_vertices_pgr";
-conn = psycopg2.connect(database=d['db'], user="postgres", password="postgres", host="127.0.0.1", port="5432")
+conn = psycopg2.connect(database=d['db'], user="rohithreddy", password="postgres", host="127.0.0.1", port="5432")
 d['conn'] = conn
 
 

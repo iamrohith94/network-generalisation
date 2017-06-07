@@ -20,7 +20,7 @@ d["fraction"] = 2
 d["table_e"] = table_e
 d["table_v"] = table_v
 d["column"] = "id";
-conn = psycopg2.connect(database=d['db'], user="postgres", password="postgres", host="127.0.0.1", port="5432")
+conn = psycopg2.connect(database=d['db'], user="rohithreddy", password="postgres", host="127.0.0.1", port="5432")
 d['conn'] = conn
 
 # Generating edge count based on betweenness

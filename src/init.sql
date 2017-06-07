@@ -3,6 +3,9 @@ DROP TABLE IF EXISTS contracted_ways_vertices_pgr;
 DROP TABLE IF EXISTS cleaned_ways;
 DROP TABLE IF EXISTS cleaned_ways_vertices_pgr;
 DROP TABLE IF EXISTS contraction_results;
+DROP TABLE IF EXISTS pairs;
+DROP TABLE IF EXISTS paths;
+DROP TABLE IF EXISTS time_stats;
 
 --The table used to store edge data after cleaning
 CREATE TABLE cleaned_ways(
@@ -49,6 +52,14 @@ CREATE TABLE time_stats(
 	contracted_time DOUBLE PRECISION,
 	actual_distance DOUBLE PRECISION,
 	contracted_distance DOUBLE PRECISION
+);
+
+
+CREATE TABLE pairs(
+	source BIGINT,
+	target BIGINT,
+	level INT
+
 );
 
 

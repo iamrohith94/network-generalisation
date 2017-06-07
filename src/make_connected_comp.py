@@ -3,7 +3,7 @@ from common import *
 from graphs import *
 import sys
 parameters = {} ;
-db = "chandigarh_2x"
+db = sys.argv[1]
 cleaned_table_e = "cleaned_ways";
 cleaned_table_v = "cleaned_ways_vertices_pgr";
 
@@ -11,7 +11,7 @@ parameters['db'] = db ;
 parameters['table_e'] = "cleaned_ways";
 parameters['table_v'] = "cleaned_ways_vertices_pgr";
 
-conn = psycopg2.connect(database=db, user="postgres", password="postgres", host="127.0.0.1", port="5432")
+conn = psycopg2.connect(database=db, user="rohithreddy", password="postgres", host="127.0.0.1", port="5432")
 cur = conn.cursor()
 parameters['conn'] = conn
 
@@ -30,7 +30,7 @@ for level in [10, 20, 30, 40, 50]:
 
 		e_query = "UPDATE "+cleaned_table_e+"\
 		SET comp_id_"+ str(level) + "=" + str(comp_id) + "\
-		WHERE source = ANY(%s) AND target = ANY(%s) AND promoted_level_" + str(level) +" >1 ;"
+		WHERE source = ANY(%s) AND target = ANY(%s) AND promoted_level_" + str(level) +" > 1 ;"
 
 		v_query = "UPDATE "+cleaned_table_v+"\
 		SET comp_id_"+ str(level) + "=" + str(comp_id) + "\
@@ -39,7 +39,7 @@ for level in [10, 20, 30, 40, 50]:
 		cur.execute(e_query, (vertex_list, vertex_list));
 		cur.execute(v_query, (vertex_list,));
 		conn.commit();
-		comp_id+=1;
+		comp_id += 1;
 
 	e_query = "UPDATE "+ cleaned_table_e + "  SET comp_id_"+str(level)+"=0 WHERE promoted_level_" + str(level)+" <= 1;" ;
 	v_query = "UPDATE "+ cleaned_table_v + "  SET comp_id_"+str(level)+"=0 WHERE promoted_level_" + str(level)+" <= 1;" ;

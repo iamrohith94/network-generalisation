@@ -77,6 +77,32 @@ def generate_random_pairs_from_table(parameters):
         pairs.append((row[0], row[1]));
     return pairs
 
+
+
+def store_random_pairs_from_components(parameters):
+    db = parameters['db']
+    conn = parameters['conn']    
+    cur = conn.cursor()
+    comp_query = "SELECT DISTINCT comp_id_%s FROM %s;"
+    vertex_query = "SELECT id FROM %s WHERE comp_id_%s = %s LIMIT 1"
+    insert_query = "INSERT INTO pairs(source, target, level) VALUES(%s, %s, %s)"
+    cur.execute(comp_query, (parameters['level'], AsIs(parameters['table_v']),));
+    rows = cur.fetchall();
+    comp_ids = []
+    vertices = []
+    for row in rows:
+        comp_ids.append(row[0]);
+    for comp_id in comp_ids:
+        cur.execute(vertex_query, (AsIs(parameters['table_v']), parameters['level'], comp_id, ))
+        rows = cur.fetchall()
+        for row in rows:
+            vertices.append(row[0])
+    for i in vertices:
+        for j in vertices:
+            if i != j:
+                cur.execute(insert_query, (i, j, parameters['level'], ))
+    conn.commit()
+
 def generate_random_pairs(parameters):
     db = parameters['db']
     conn = parameters['conn']    
