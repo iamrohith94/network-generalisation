@@ -74,11 +74,12 @@ class ShortestPath:
 		return path
 
 
-	def get_connected_comp_path(self, source, target, level):
+	def get_connected_comp_path(self, source, target, level, conn):
 		path = Path() 
+		cursor = conn.cursor()
 		query = "SELECT node, edge, cost FROM pgr_conn_compQuery(%s, %s, %s, %s, %s)" 
-		self.cur.execute(query, (self.edge_table, self.vertex_table, source, target, level, ))
-		rows = self.cur.fetchall()
+		cursor.execute(query, (self.edge_table, self.vertex_table, source, target, level, ))
+		rows = cursor.fetchall()
 		for row in rows:
 			path.add_entry({'node': row[0], 'edge': row[1], 'cost': row[2]})
 		return path

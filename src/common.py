@@ -77,6 +77,14 @@ def generate_random_pairs_from_table(parameters):
         pairs.append((row[0], row[1]));
     return pairs
 
+def store_random_pairs_into_table(parameters):
+    conn = parameters['conn']    
+    cur = conn.cursor()
+    random_query = "SELECT t1.id as source, t2.id as target INTO random_pairs "\
+    "FROM %s as t1, %s AS t2 \
+    ORDER BY random() LIMIT %s;"
+    cur.execute(random_query, (AsIs(parameters['table_v']), AsIs(parameters['table_v']), parameters['num_pairs'],));
+    conn.commit()
 
 
 def store_random_pairs_from_components(parameters):
@@ -85,7 +93,7 @@ def store_random_pairs_from_components(parameters):
     cur = conn.cursor()
     comp_query = "SELECT DISTINCT comp_id_%s FROM %s;"
     vertex_query = "SELECT id FROM %s WHERE comp_id_%s = %s LIMIT 1"
-    insert_query = "INSERT INTO pairs(source, target, level) VALUES(%s, %s, %s)"
+    insert_query = "INSERT INTO comp_pairs(source, target, level) VALUES(%s, %s, %s)"
     cur.execute(comp_query, (parameters['level'], AsIs(parameters['table_v']),));
     rows = cur.fetchall();
     comp_ids = []
@@ -128,7 +136,7 @@ def generate_random_pairs_dist(parameters):
     conn = parameters['conn']   
     cur = conn.cursor()
     start, end = parameters['range']
-    random_query = "SELECT t1.id, t2.id "\
+    random_query = "SELECT t1.id , t2.id "\
     "FROM %s as t1, %s AS t2 \
     WHERE ST_Distance(t1.the_geom, t2.the_geom)*111 >= %s \
     AND ST_Distance(t1.the_geom, t2.the_geom)*111 <= %s\

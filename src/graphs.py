@@ -28,8 +28,9 @@ def edge_table_to_graph(parameters):
     vertex_query = "SELECT id FROM "+parameters['table_v'];
 
     #query for edge ids
-    edge_query = "SELECT source, target, cost, reverse_cost FROM "+parameters['table_e'];
-    
+    #edge_query = "SELECT source, target, cost, reverse_cost FROM "+parameters['table_e'];
+    edge_query = parameters['query']
+
     #Undirected graph or directed graph
     is_directed = parameters['directed'];
     if is_directed:

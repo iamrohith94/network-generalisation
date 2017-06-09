@@ -26,6 +26,7 @@ for level in [10, 20, 30, 40, 50]:
 	#Selecting the largest cc and removing others
 	comp_id = 1;
 	for s in cc: 
+		
 		vertex_list = list(s);
 
 		e_query = "UPDATE "+cleaned_table_e+"\

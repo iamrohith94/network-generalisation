@@ -48,14 +48,14 @@ CREATE TABLE time_stats(
 	source BIGINT,
 	target BIGINT,
 	level INT,
-	actual_time DOUBLE PRECISION,
-	contracted_time DOUBLE PRECISION,
-	actual_distance DOUBLE PRECISION,
-	contracted_distance DOUBLE PRECISION
+	actual_build_time DOUBLE PRECISION,
+	actual_avg_execution_time DOUBLE PRECISION,
+	contracted_build_time DOUBLE PRECISION,
+	contracted_avg_execution_time DOUBLE PRECISION
 );
 
 
-CREATE TABLE pairs(
+CREATE TABLE comp_pairs(
 	source BIGINT,
 	target BIGINT,
 	level INT
