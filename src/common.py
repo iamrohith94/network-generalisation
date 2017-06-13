@@ -132,6 +132,35 @@ def generate_random_pairs(parameters):
         pairs.append((vertices[i1], vertices[i2]))
     return pairs
 
+def generate_random_source_target(parameters):
+    conn = parameters['conn']    
+    cur = conn.cursor()
+    random_query = "SELECT id FROM %s ;"
+    cur.execute(random_query, (AsIs(parameters['contracted_table_v']), ));
+    rows = cur.fetchall()
+    vertices = []
+    sources = []
+    targets = []
+    for row in rows:
+        vertices.append(row[0])
+    i = 0
+    print "num of vertices: ", len(vertices)
+    
+    while i < parameters['num_pairs']:
+        i1 = random.randint(0, len(vertices)-1)
+        i2 = random.randint(0, len(vertices)-1)
+        #print i1, i2
+        if i1 == i2:
+            continue
+        try:
+            sources.append(vertices[i1])
+            targets.append(vertices[i2])
+        except IndexError:
+            print i1, i2
+        i += 1
+
+    return (sources, targets)
+
 def generate_random_pairs_dist(parameters):
     conn = parameters['conn']   
     cur = conn.cursor()
@@ -479,5 +508,29 @@ def get_matching_node_count(parameters):
     rows = cur.fetchall();
     for row in rows:
         matched = row[0]
-    return {"cost": cost, "total": count, "matched": matched};
+    return {"cost": cost, "total": count, "matched": matched}
+
+def generate_edge_count_m_m(parameters):
+    conn = parameters['conn']
+    cur = conn.cursor()
+    print "Number of vertex pairs: "+str(len(parameters['sources']))
+    count = {}
+
+    #Inner query for dijkstra -> contracted graph is taken 
+    inner = 'SELECT id, source, target, cost, reverse_cost '\
+    'FROM '+parameters['contracted_table_e'];
+
+    dijkstra_query = "SELECT edge from pgr_dijkstra(%s, %s, %s)"
+    
+    cur.execute(dijkstra_query, (inner, parameters['sources'], parameters['targets']))
+
+    rows = cur.fetchall()
+    for row in rows:
+        try:
+            count[row[0]] += 1
+        except KeyError:
+            count[row[0]] = 1
+
+    return count
+    
     

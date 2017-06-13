@@ -62,6 +62,12 @@ CREATE TABLE comp_pairs(
 
 );
 
+CREATE TABLE betweenness_temp(
+	source BIGINT,
+	target BIGINT,
+	betweenness DOUBLE PRECISION
+);
+
 
 SELECT AddGeometryColumn('cleaned_ways', 'the_geom', 4326, 'LINESTRING', 2 );
 SELECT AddGeometryColumn('cleaned_ways_vertices_pgr', 'the_geom', 4326, 'POINT', 2 );
