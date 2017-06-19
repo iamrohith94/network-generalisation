@@ -132,6 +132,30 @@ def generate_random_pairs(parameters):
         pairs.append((vertices[i1], vertices[i2]))
     return pairs
 
+def store_random_pairs(parameters):
+    db = parameters['db']
+    conn = parameters['conn']    
+    cur = conn.cursor()
+    random_query = "SELECT id FROM %s ;"
+    insert_query = "INSERT INTO random_pairs(source, target) VALUES(%s, %s)"
+    cur.execute(random_query, (AsIs(parameters['table_v']), ));
+    rows = cur.fetchall()
+    vertices = []
+    for row in rows:
+        vertices.append(row[0])
+    i = 0
+    pairs = []
+    while i < parameters['num_pairs']:
+        i1 = random.randint(0, parameters['num_pairs'])
+        i2 = random.randint(0, parameters['num_pairs'])
+        if i1 == i2:
+            continue
+        i += 1
+        cur.execute(insert_query, (vertices[i1], vertices[i2], ))
+        #pairs.append((vertices[i1], vertices[i2]))
+        #return pairs
+    conn.commit()
+
 def generate_random_source_target(parameters):
     conn = parameters['conn']    
     cur = conn.cursor()

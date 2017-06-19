@@ -1,6 +1,7 @@
 from graphs import *
 import time
 import csv
+import math
 db = sys.argv[1]
 d={}
 table_e = 'contracted_ways'
@@ -29,30 +30,47 @@ current_time = time.time()
 k = 100
 
 betweenness = {}
+count = {}
 for i in xrange(0, num_iterations):
 	print "On iteration: ", i
-	betweenness_temp = nx.edge_betweenness_centrality(G, k=k, weight = "weight")
+	betweenness_temp = nx.edge_betweenness_centrality(G, k=k, weight = "weight", normalized=False)
 	#count = 0
 	for x in betweenness_temp.keys():
 		try:
 			betweenness[x] += betweenness_temp[x]
 		except KeyError:
 			betweenness[x] = betweenness_temp[x]
+		try:
+			count[x] += 1
+		except KeyError:
+			count[x] = 1
 
+
+d['table'] = table_v
+v_count = get_count(d)
+
+print "k: ", k
+print "Number of vertices: ", v_count
+
+for x in betweenness.keys():
+	betweenness[x] = math.ceil(betweenness[x]/count[x])
 
 print "Inserting stuff in a csv file....."
 
-ofile  = open(db+'.csv', "wb")
+ofile  = open(db+'_test'+'.csv', "wb")
 writer = csv.writer(ofile, delimiter=',')
+
 
 for key, value in betweenness.items():
 	if value > 0.00:
 		writer.writerow([key[0], key[1], value])
+violate = 0
 
-#for edge in betweenness.keys():
+print "Inserting stuff in db....."
 
-#cur.execute(update_query, (AsIs("cleaned_ways"), AsIs("betweenness"), AsIs("betweenness"), betweenness[edge], edge[0], edge[1], AsIs("cost"), ))
-#cur.execute(update_query, (AsIs("cleaned_ways"), AsIs("betweenness"), AsIs("betweenness"), betweenness[edge], edge[1], edge[0], AsIs("reverse_cost"), ))
-conn.commit()
+for edge in betweenness.keys():
+	cur.execute(update_query, (AsIs("cleaned_ways"), AsIs("betweenness"), AsIs("betweenness"), betweenness[edge], edge[0], edge[1], AsIs("cost"), ))
+	cur.execute(update_query, (AsIs("cleaned_ways"), AsIs("betweenness"), AsIs("betweenness"), betweenness[edge], edge[1], edge[0], AsIs("reverse_cost"), ))
+	conn.commit()
 #print "Time taken to calculate betweenness: ", time.time()-current_time
 #print count
