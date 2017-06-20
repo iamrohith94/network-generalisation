@@ -16,7 +16,7 @@ d = {}
 d["db"] = db;
 d["table_e"] = table_e
 d["table_v"] = table_v
-conn = psycopg2.connect(database=d['db'], user="postgres", password="postgres", host="127.0.0.1", port="5432")
+conn = psycopg2.connect(database=d['db'], user="rohithreddy", password="postgres", host="127.0.0.1", port="5432")
 d['conn'] = conn
 
 #All edges and vertices whose level <= skeleton_level are included in the skeleton
@@ -36,8 +36,8 @@ for k in breaks[0:1]:
 	update_level_skeleton(d);
 
 
-update_query = "UPDATE %s SET promoted_level_%s = %s \
-WHERE id IN (SELECT e.id FROM %s AS e WHERE e.promoted_level_%s < e.level_%s AND e.promoted_level_%s = 1);"
+update_query = "UPDATE %s SET promoted_level_%s = %s " \
+" WHERE id IN (SELECT e.id FROM %s AS e WHERE e.promoted_level_%s < e.level_%s AND e.promoted_level_%s = 1);"
 cur = conn.cursor()
 for index, curr_level in enumerate(breaks[1:]):
 	
@@ -49,6 +49,12 @@ for index, curr_level in enumerate(breaks[1:]):
 	cur.execute(update_query, (AsIs(d['table_e']),
 		curr_level, 1, 
 		AsIs(d['table_e']),
+		prev_level, prev_level, prev_level,
+		))
+
+	cur.execute(update_query, (AsIs(d['table_v']),
+		curr_level, 1, 
+		AsIs(d['table_v']),
 		prev_level, prev_level, prev_level,
 		))
 	#print cur.rowcount

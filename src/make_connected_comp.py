@@ -15,14 +15,17 @@ conn = psycopg2.connect(database=db, user="rohithreddy", password="postgres", ho
 cur = conn.cursor()
 parameters['conn'] = conn
 
-
+add_comp_columns = "ALTER TABLE %s ADD COLUMN comp_id_%s BIGINT"
 for level in [10, 20, 30, 40, 50]:
 
 	parameters['query'] = "SELECT source, target, cost, reverse_cost FROM cleaned_ways where promoted_level_"+ str(level) + " > 1 ;";
-	parameters['directed'] = True;
+	parameters['directed'] = False;
 
 	G = edge_table_to_graph(parameters);
-	cc =  sorted(nx.strongly_connected_components(G), key = len, reverse = True);
+	cc =  sorted(nx.connected_components(G), key = len, reverse = True);
+
+	cur.execute(add_comp_columns, (AsIs(cleaned_table_e), level, ))
+	cur.execute(add_comp_columns, (AsIs(cleaned_table_v), level, ))
 	#Selecting the largest cc and removing others
 	comp_id = 1;
 	for s in cc: 

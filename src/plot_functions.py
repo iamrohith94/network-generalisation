@@ -8,7 +8,7 @@ def betweenness_distribution(parameters):
 	VS the number of edges(having a particular betweenness)
 	"""
 	conn = parameters['conn']
-	cur = conn.cursor();
+	cur = conn.cursor()
 	betweenness_values = sorted(parameters['betweenness_values'])
 	edge_count = []
 	query = "SELECT count(*) FROM %s WHERE %s = %s"

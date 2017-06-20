@@ -16,7 +16,8 @@ d['conn'] = conn;
 d['num_pairs'] = 1000
 cur = conn.cursor()
 
-#store_random_pairs_into_table(d)
+store_random_pairs(d)
+
 
 equal = 0;
 non_equal = 0;

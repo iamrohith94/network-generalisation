@@ -10,7 +10,6 @@ stores it in the database.
 """
 
 import math
-import pandas as p
 import numpy as np
 from statistical_functions import *
 from graphs import *
@@ -28,7 +27,7 @@ d['conn'] = conn
 
 #Fetching betweenness values
 d['query'] = "SELECT betweenness FROM "+d['table_e'];
-d['betweenness_values'] = [int(x[0]) for x in get_selected_columns(d) if x[0] > 0]
+d['betweenness_values'] = [int(x[0]) for x in get_selected_columns(d) if x[0] > 0.000]
 
 #Storing the betweenness values as a series
 #s = p.Series(d['betweenness_values'])

@@ -49,9 +49,9 @@ def edge_table_to_graph(parameters):
     rows = cur.fetchall()
     for row in rows:
         if row[2] > 0:
-            G.add_edge(int(row[0]), int(row[1]))
+            G.add_edge(int(row[0]), int(row[1]), weight = row[2])
         if row[3] > 0:
-            G.add_edge(int(row[1]), int(row[0]))
+            G.add_edge(int(row[1]), int(row[0]),  weight = row[3])
     return G
 
 
@@ -93,9 +93,9 @@ def edge_table_to_graph_level(parameters):
     rows = cur.fetchall()
     for row in rows:
         if row[2] > 0:
-            G.add_edge(int(row[0]), int(row[1]))
+            G.add_edge(int(row[0]), int(row[1]), weight = row[2])
         if row[3] > 0:
-            G.add_edge(int(row[1]), int(row[0]))
+            G.add_edge(int(row[1]), int(row[0]), weight = row[3])
     return G
 
 

@@ -19,7 +19,7 @@ cur = conn.cursor()
 equal = 0;
 non_equal = 0;
 limit = 1000
-num_iterations = 1
+num_iterations = 2
 time_table = "time_stats"
 edges_sql = "SELECT id, source, target, cost, reverse_cost FROM cleaned_ways"
 pairs_sql = "SELECT source, target FROM random_pairs LIMIT %s"
@@ -48,7 +48,7 @@ for pair in pairs:
 				#print "source: ", row[0]
 				#print "target: ", row[1]
 				cur.execute(insert_sql_contracted, (AsIs(time_table), row[0], row[1], level, row[2], row[3]))
-
+				conn.commit()
 		cur.execute(orig_time_sql, (edges_sql, 'pgr_dijkstra', sources, targets, num_iterations))
 		rows = cur.fetchall()
 		#print "Actual Times"
@@ -57,7 +57,7 @@ for pair in pairs:
 			#print "target: ", row[1]
 			#print row[2], row[3]
 			cur.execute(update_sql, (AsIs(time_table), row[2], row[3], row[0], row[1]))
-			
+			conn.commit()
 		conn.commit()
 		sources = []
 		targets = []

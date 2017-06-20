@@ -137,6 +137,8 @@ def store_random_pairs(parameters):
     conn = parameters['conn']    
     cur = conn.cursor()
     random_query = "SELECT id FROM %s ;"
+    parameters['table'] = parameters['table_v']
+    
     insert_query = "INSERT INTO random_pairs(source, target) VALUES(%s, %s)"
     cur.execute(random_query, (AsIs(parameters['table_v']), ));
     rows = cur.fetchall()
@@ -145,9 +147,11 @@ def store_random_pairs(parameters):
         vertices.append(row[0])
     i = 0
     pairs = []
+    count = len(vertices)
     while i < parameters['num_pairs']:
-        i1 = random.randint(0, parameters['num_pairs'])
-        i2 = random.randint(0, parameters['num_pairs'])
+        i1 = random.randint(0, count-1)
+        i2 = random.randint(0, count-1)
+        print i1, i2
         if i1 == i2:
             continue
         i += 1

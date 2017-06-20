@@ -62,6 +62,12 @@ CREATE TABLE comp_pairs(
 
 );
 
+CREATE TABLE random_pairs(
+	source BIGINT,
+	target BIGINT
+
+);
+
 CREATE TABLE betweenness_temp(
 	source BIGINT,
 	target BIGINT,
