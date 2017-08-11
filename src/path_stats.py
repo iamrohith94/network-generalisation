@@ -1,3 +1,4 @@
+
 import matplotlib.pyplot as plt
 from shortest_path_class import *
 from common import *
@@ -11,7 +12,7 @@ d = {}
 d["db"] = db;
 d["table_e"] = table_e
 d["table_v"] = table_v
-conn = psycopg2.connect(database=d['db'], user="postgres", password="postgres", host="127.0.0.1", port="5432")
+conn = psycopg2.connect(database=d['db'], user="rohithreddy", password="postgres", host="127.0.0.1", port="5432")
 d['conn'] = conn;
 
 cur = conn.cursor()
@@ -36,8 +37,7 @@ while i < d['num_pairs']:
 	if count % 10 == 0:
 		print count
 	query = "INSERT INTO %s(source, target, level, actual_distance, contracted_distance) VALUES(%s, %s, %s, %s, %s)"
-	geom_query = "UPDATE %s SET %s = (SELECT ST_UNION(edge_table.the_geom) FROM %s AS edge_table WHERE edge_table.id = ANY(%s)) \
-	WHERE source = %s AND target = %s AND level = %s"
+	geom_query = "UPDATE %s SET %s = (SELECT ST_UNION(edge_table.the_geom) FROM %s AS edge_table WHERE edge_table.id = ANY(%s)) WHERE source = %s AND target = %s AND level = %s"
 	#print pair
 	#print "source===,target " , pair[0], pair[1]
 	orig_path = sp.get_original_path(pair[0], pair[1])
@@ -49,7 +49,7 @@ while i < d['num_pairs']:
 	cur.execute(geom_query, (AsIs("paths"), AsIs("the_geom"), AsIs(table_e), list(orig_edges), pair[0], pair[1], 100))
 	for level in levels:
 		#print "level: ", level
-		g_path = sp.get_generalised_path(pair[0], pair[1], "promoted_level_" + str(level))
+		g_path = sp.get_connected_comp_path(pair[0], pair[1], level)
 		#print "Path: ", g_path
 		g_edges = g_path.get_edge_set()
 		if len(g_edges) <= 1:

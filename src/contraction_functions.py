@@ -9,8 +9,8 @@ def is_table_present(parameters):
     """
     conn = parameters['conn']
     cur = conn.cursor()
-    query = " SELECT table_name \
-            FROM information_schema.tables \
+    query = " SELECT table_name "\
+            "FROM information_schema.tables \
             WHERE table_name = %s"
     cur.execute(query, (parameters['table'], ));
     rows = cur.fetchall();
@@ -34,8 +34,8 @@ def generate_contraction_results(parameters):
     #If table is already present it doesn't compute contraction
     if is_table_present(parameters) == False:  
         cur = conn.cursor()
-        edge_query = "SELECT id, source, target, cost, reverse_cost\
-        FROM "+parameters['input_table'];
+        edge_query = "SELECT id, source, target, cost, reverse_cost "\
+        "FROM "+parameters['input_table'];
         query = "SELECT * INTO %s FROM pgr_contractGraph(%s, %s)";
         cur.execute(query, (AsIs(contraction_table), edge_query, parameters['contraction_order'], ));
         conn.commit();
@@ -62,10 +62,10 @@ def update_contraction_results(parameters):
     dead_end_vertices = [int(x) for x in dead_end_vertices]
 
     #Updating the edges and vertices of the graph with contraction results
-    e_query = "UPDATE %s SET %s = TRUE\
-    WHERE  source = ANY(%s) OR target = ANY(%s)";
-    v_query = "UPDATE %s SET %s = TRUE \
-    WHERE id = ANY(%s)";
+    e_query = "UPDATE %s SET %s = TRUE "\
+    "WHERE  source = ANY(%s) OR target = ANY(%s)";
+    v_query = "UPDATE %s SET %s = TRUE "\
+    "WHERE id = ANY(%s)";
     cur.execute(e_query, (AsIs(parameters['table_e']),AsIs(parameters['contraction_column']), dead_end_vertices, dead_end_vertices));
     cur.execute(v_query, (AsIs(parameters['table_v']),AsIs(parameters['contraction_column']), dead_end_vertices,));
 

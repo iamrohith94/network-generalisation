@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from shortest_path_class import *
 from common import *
 from shortest_path_class import *
-db = "test_gachibowli"
+db = "chandigarh_conn"
 sp = ShortestPath(db);
 p = Path();
 db = sys.argv[1];
@@ -13,7 +13,7 @@ d = {}
 d["db"] = db;
 d["table_e"] = table_e
 d["table_v"] = table_v
-conn = psycopg2.connect(database=d['db'], user="postgres", password="postgres", host="127.0.0.1", port="5432")
+conn = psycopg2.connect(database=d['db'], user="rohithreddy", password="postgres", host="127.0.0.1", port="5432")
 d['conn'] = conn;
 
 d['table'] = table_v
@@ -21,7 +21,7 @@ num_vertices = get_count(d);
 
 # Generating vertex pairs
 print "Generating vertex pairs...."
-d['num_pairs'] = 10;
+d['num_pairs'] = 100;
 d['level'] = 1;
 
 pairs = generate_random_pairs(d);
@@ -49,7 +49,8 @@ for p in breaks:
 		orig_path = sp.get_original_path(d['source'], d['target']);
 		if len(orig_path) == 0:
 			continue;
-		gen_path = sp.get_generalised_path(d['source'], d['target'], d['level_column']);
+		gen_path = sp.get_connected_comp_path(d['source'], d['target'], p);
+		#gen_path = sp.get_generalised_path(d['source'], d['target'], d['level_column']);
 		#gen_path = sp.astar_path(d['source'], d['target'], d['level_column']);
 		gen_path_len = gen_path.get_path_cost();
 		orig_path_len = orig_path.get_path_cost();
@@ -64,7 +65,7 @@ for p in breaks:
 	#print "Diff Distances: ", dist_diff
 	plt.plot(actual_dist, dist_diff, 'ro')
 
-	plt.axis([0, 0.01, 0, 0.01])
+	#plt.axis([0, 0.0001, 0, 0.0001])
 	plt.savefig('../images/result_level_'+str(p)+'.png',facecolor='white')
 	plt.clf();
 

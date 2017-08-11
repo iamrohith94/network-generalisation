@@ -10,7 +10,6 @@ stores it in the database.
 """
 
 import math
-import pandas as p
 import numpy as np
 from statistical_functions import *
 from graphs import *
@@ -23,12 +22,12 @@ d = {}
 d["db"] = db;
 d["table_e"] = table_e
 d["table_v"] = table_v
-conn = psycopg2.connect(database=d['db'], user="postgres", password="postgres", host="127.0.0.1", port="5432")
+conn = psycopg2.connect(database=d['db'], user="rohithreddy", password="postgres", host="127.0.0.1", port="5432")
 d['conn'] = conn
 
 #Fetching betweenness values
 d['query'] = "SELECT betweenness FROM "+d['table_e'];
-d['betweenness_values'] = [int(x[0]) for x in get_selected_columns(d) if x[0] > 0]
+d['betweenness_values'] = [int(x[0]) for x in get_selected_columns(d) if x[0] > 0.000]
 
 #Storing the betweenness values as a series
 #s = p.Series(d['betweenness_values'])

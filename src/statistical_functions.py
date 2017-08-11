@@ -5,6 +5,7 @@
 This script contains statistical helper functions
 """
 from common import *
+"""
 import pandas as pd
 def update_quantile(parameters):
 	print "Updating quantile ranges...."
@@ -51,7 +52,7 @@ def update_top_k(parameters):
 		populate_edge_levels(parameters)
 		#print level_edges;
 		conn.commit()
-
+"""
 def update_with_intervals(parameters):
 	"""
 	Updates the level column of the edge and vertex table given the interval ranges
@@ -77,10 +78,11 @@ def update_with_intervals(parameters):
 	Update those edges where source vertex and target vertex are of level 1 but
 	edge is not level 1
 	"""
+	"""
 	skeleton_level = 1
-	u_query = "UPDATE %s SET %s = %s \
-	FROM %s AS v1, %s AS v2 \
-	WHERE v1.id = source AND v2.id = target AND v1.%s = %s AND v2.%s = %s"
+	u_query = "UPDATE %s SET %s = %s "\
+	"FROM %s AS v1, %s AS v2 "\
+	"WHERE v1.id = source AND v2.id = target AND v1.%s = %s AND v2.%s = %s"
 
 	cur.execute(u_query, (AsIs(parameters['table_e']),
 		AsIs(parameters['promoted_level_column']), skeleton_level, 
@@ -88,5 +90,6 @@ def update_with_intervals(parameters):
 		AsIs(parameters['promoted_level_column']), skeleton_level, 
 		AsIs(parameters['promoted_level_column']), skeleton_level))
 	conn.commit()
+	"""
 
 

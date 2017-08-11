@@ -3,6 +3,9 @@ DROP TABLE IF EXISTS contracted_ways_vertices_pgr;
 DROP TABLE IF EXISTS cleaned_ways;
 DROP TABLE IF EXISTS cleaned_ways_vertices_pgr;
 DROP TABLE IF EXISTS contraction_results;
+DROP TABLE IF EXISTS pairs;
+DROP TABLE IF EXISTS paths;
+DROP TABLE IF EXISTS time_stats;
 
 --The table used to store edge data after cleaning
 CREATE TABLE cleaned_ways(
@@ -33,7 +36,11 @@ CREATE TABLE paths(
 	target BIGINT,
 	level INT,
 	actual_distance DOUBLE PRECISION,
-	contracted_distance DOUBLE PRECISION
+	contracted_distance DOUBLE PRECISION,
+	original_graph_edges BIGINT,
+	original_graph_vertices BIGINT,
+	contracted_graph_edges BIGINT,
+	contracted_graph_vertices BIGINT
 );
 
 CREATE TABLE time_stats(
@@ -41,10 +48,30 @@ CREATE TABLE time_stats(
 	source BIGINT,
 	target BIGINT,
 	level INT,
-	actual_time DOUBLE PRECISION,
-	contracted_time DOUBLE PRECISION,
-	actual_distance DOUBLE PRECISION,
-	contracted_distance DOUBLE PRECISION
+	actual_build_time DOUBLE PRECISION,
+	actual_avg_execution_time DOUBLE PRECISION,
+	contracted_build_time DOUBLE PRECISION,
+	contracted_avg_execution_time DOUBLE PRECISION
+);
+
+
+CREATE TABLE comp_pairs(
+	source BIGINT,
+	target BIGINT,
+	level INT
+
+);
+
+CREATE TABLE random_pairs(
+	source BIGINT,
+	target BIGINT
+
+);
+
+CREATE TABLE betweenness_temp(
+	source BIGINT,
+	target BIGINT,
+	betweenness DOUBLE PRECISION
 );
 
 
