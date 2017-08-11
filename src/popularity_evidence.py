@@ -16,7 +16,7 @@ tertiary = 109
 primary_link = 107
 secondary_link = 124
 tertiary_link = 125
-popular_ways = [motorway, trunk, primary, secondary, tertiary]
+popular_ways = [motorway, trunk, primary, secondary]
 
 conn = psycopg2.connect(database=d['db'], user="postgres", password="postgres", host="127.0.0.1", port="5432")
 
