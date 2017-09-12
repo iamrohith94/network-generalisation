@@ -1,26 +1,6 @@
-import psycopg2
-import random
-import math
+#Contracting the cleaned data
+from common import *
 from graphs import *
-
-def is_table_present(parameters):
-    """
-    Checks whether a table with a particular name in the db exists or not
-    """
-    conn = parameters['conn']
-    cur = conn.cursor()
-    query = " SELECT table_name "\
-            "FROM information_schema.tables \
-            WHERE table_name = %s"
-    cur.execute(query, (parameters['table'], ));
-    rows = cur.fetchall();
-    for row in rows:
-        if row[0] == parameters['table']:
-            return True
-        else:
-            return False
-    return False
-
 
 
 def generate_contraction_results(parameters):
@@ -70,3 +50,51 @@ def update_contraction_results(parameters):
     cur.execute(v_query, (AsIs(parameters['table_v']),AsIs(parameters['contraction_column']), dead_end_vertices,));
 
     conn.commit();
+
+
+
+if __name__ == '__main__':
+	d = {}
+	d['db'] = sys.argv[1];
+	table_e = "cleaned_ways"
+	table_v = "cleaned_ways_vertices_pgr"
+	d['table'] = table_e;
+	conn = psycopg2.connect(database=d['db'], user="rohithreddy", password="postgres", host="127.0.0.1", port="5432")
+	d['conn'] = conn
+
+	"""
+	1 -> dead end contraction
+	2 -> linear contraction
+	"""
+	d['contraction_order'] = [1]
+	d['input_table'] = table_e;
+	d['contraction_table'] = "contraction_results";
+
+	print "Generating contraction results......"
+	generate_contraction_results(d);
+
+	print "Generating contracted graph......"
+	d['table_e'] = table_e;
+	d['table_v'] = table_v;
+	d['directed'] = True;
+	d['contraction_column'] = "is_contracted"
+	update_contraction_results(d);
+
+
+	#Storing the contraction results in separate tables namely contracted_ways and contracted_ways_vertices_pgr
+	d['query'] = "SELECT id, source, target, cost, reverse_cost, the_geom INTO contracted_ways FROM cleaned_ways WHERE is_contracted = FALSE";
+	run_query(d);
+
+	d['query'] = "SELECT * INTO contracted_ways_vertices_pgr FROM cleaned_ways_vertices_pgr WHERE is_contracted = FALSE";
+	run_query(d);
+
+
+	d['table'] = 'contracted_ways'
+	print "Contracted edge count: " + str(get_count(d));
+
+	d['table'] = 'contracted_ways_vertices_pgr'
+	print "Contracted vertex count: " + str(get_count(d));
+
+
+	conn.commit()
+	conn.close();

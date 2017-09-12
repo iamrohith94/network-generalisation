@@ -59,7 +59,6 @@ CREATE TABLE comp_pairs(
 	source BIGINT,
 	target BIGINT,
 	level INT
-
 );
 
 CREATE TABLE random_pairs(

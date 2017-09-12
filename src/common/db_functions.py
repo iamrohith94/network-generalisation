@@ -339,57 +339,6 @@ def generate_edge_count(parameters):
     #print count
     return count
 
-def clean_data(parameters):
-    """
-    Cleans the original data, by removing small disconnectivities
-    Keeps only the most strongly connected component
-    Considers the graph as undirected even if it is directed
-    Stores the cleaned data into cleaned_ways and cleaned_ways_vertices_pgr tables
-    """ 
-    db = parameters['db']
-    conn = parameters['conn']
-    cur = conn.cursor();
-    cleaned_table_e = "cleaned_"+parameters['table_e'];
-    cleaned_table_v = "cleaned_"+parameters['table_v'];
-    parameters['query'] = "SELECT source, target, cost, reverse_cost FROM "+parameters['table_e'];
-    
-    #Converting edge table to networkX graph
-    parameters['directed'] = False;
-    G = edge_table_to_graph(parameters);
-
-    #print "Original Graph"
-    #print G.edges()
-
-    #Finding connected components in the graph
-    cc =  sorted(nx.connected_components(G), key = len, reverse = True)
-    
-    #Selecting the largest cc and removing others
-    removal = set([]);
-    for s in cc[1:]:
-        removal = removal.union(s)
-    removal = list(removal);
-
-    #print "Removed Vertices"
-    #print removal
-    
-    #Inserting largest cc into cleaned_ways table
-    e_query = "INSERT INTO "+cleaned_table_e+"(\
-    id,source,target,x1,y1,x2,y2,cost,reverse_cost,the_geom) \
-    SELECT gid AS id, source,\
-    target, x1, y1, x2, y2, cost, reverse_cost, the_geom \
-    FROM " +parameters['table_e']+" WHERE \
-    source <> ALL(%s) AND \
-    target <> ALL(%s) ;"
-
-    #Inserting largest cc into cleaned_ways_vertices table
-    v_query = "INSERT INTO "+cleaned_table_v+"(\
-    id,lon,lat,the_geom) \
-    SELECT id,lon,lat, the_geom\
-     FROM "+parameters['table_v']+" WHERE id <> ALL(%s);"
-    
-    cur.execute(e_query, (removal, removal));
-    cur.execute(v_query, (removal,));
-    conn.commit()
 
 def update_promoted_level(parameters):
     n1 = parameters['source'];
@@ -560,5 +509,66 @@ def generate_edge_count_m_m(parameters):
             count[row[0]] = 1
 
     return count
+
+def is_table_present(parameters):
+    """
+    Checks whether a table with a particular name in the db exists or not
+    """
+    conn = parameters['conn']
+    cur = conn.cursor()
+    query = " SELECT table_name "\
+            "FROM information_schema.tables \
+            WHERE table_name = %s"
+    cur.execute(query, (parameters['table'], ));
+    rows = cur.fetchall();
+    for row in rows:
+        if row[0] == parameters['table']:
+            return True
+        else:
+            return False
+    return False
+
+
+
+def get_skeleton(parameters):
+    db = parameters['db'];
+    conn = parameters['conn']
+    cur = conn.cursor();
+    query = "SELECT id, within_nodes FROM connected_components\
+             ORDER BY ST_area(st_envelope(the_geom)) DESC \
+             LIMIT 1";
+    cur.execute(query);
+    rows = cur.fetchall();
+    for row in rows:
+        skeleton_id = row[0];
+        within_nodes = row[1];
+    return skeleton_id, within_nodes;
+
+
+def update_level_skeleton(parameters):
+    conn = parameters['conn']
+    cur = conn.cursor()
+    paths_to_add = parameters['path_additions'];
+    update_query = "UPDATE %s SET %s = %s WHERE id = ANY(%s)";
+    edges_to_add = []
+    nodes_to_add = []
+    dijkstra_query = "SELECT node, edge from pgr_dijkstra(%s,%s,%s)"; 
+    inner = 'SELECT id, source, target, cost, reverse_cost \
+    FROM '+parameters['table_e'];
+    for edge in paths_to_add:
+        src = edge[0]
+        target = edge[1]
+        #Adding the source and target into a table
+        cur.execute(dijkstra_query, (inner, src, target, ));
+        rows = cur.fetchall()
+        for row in rows:
+            nodes_to_add.append(row[0]);
+            edges_to_add.append(row[1]);
+    #print "Edge Additions: ", edges_to_add
+    cur.execute(update_query, (AsIs(parameters['table_e']), AsIs(parameters['promoted_level_column']), parameters['level'], edges_to_add, ));
+    cur.execute(update_query, (AsIs(parameters['table_v']), AsIs(parameters['promoted_level_column']), parameters['level'], nodes_to_add, ));
+
+    conn.commit();
+
     
     
