@@ -4,14 +4,8 @@ Created on Tue Feb 16 15:51:40 2016
 
 @author: rohith
 """
-
-import psycopg2
-import numpy as np
-from common import *;
-from path_class import *;
-import numpy as np
 from psycopg2.extensions import AsIs
-
+import networkx as nx
 
 """
 Returns the networkX graph structure of an edge table
@@ -23,30 +17,30 @@ row[3] -> reverse_cost
 def edge_table_to_graph(parameters):
     db = parameters['db']
     conn = parameters['conn']
-    cur = conn.cursor();
+    cur = conn.cursor() 
 
     #query for vertex ids
-    vertex_query = "SELECT id FROM "+parameters['table_v'];
+    vertex_query = "SELECT id FROM "+parameters['table_v'] 
 
     #query for edge ids
-    #edge_query = "SELECT source, target, cost, reverse_cost FROM "+parameters['table_e'];
+    #edge_query = "SELECT source, target, cost, reverse_cost FROM "+parameters['table_e'] 
     edge_query = parameters['query']
 
     #Undirected graph or directed graph
-    is_directed = parameters['directed'];
+    is_directed = parameters['directed'] 
     if is_directed:
-        G = nx.DiGraph();
+        G = nx.DiGraph() 
     else:
-        G = nx.Graph();
+        G = nx.Graph() 
     
     #Adding vertices
-    cur.execute(vertex_query);
+    cur.execute(vertex_query) 
     rows = cur.fetchall()
     for row in rows:
-        G.add_node(row[0]);
+        G.add_node(row[0]) 
     
     #Adding edges
-    cur.execute(edge_query);
+    cur.execute(edge_query) 
     rows = cur.fetchall()
     for row in rows:
         if row[2] > 0:
@@ -66,31 +60,31 @@ row[3] -> reverse_cost
 """   
 def edge_table_to_graph_level(parameters):
     conn = parameters['conn']
-    cur = conn.cursor();
+    cur = conn.cursor() 
 
     #query for vertex ids
-    vertex_query = "SELECT id FROM %s WHERE %s <= %s";
+    vertex_query = "SELECT id FROM %s WHERE %s <= %s" 
 
     #query for edge ids
-    edge_query = "SELECT source, target, cost, reverse_cost FROM %s WHERE %s <= %s";
+    edge_query = "SELECT source, target, cost, reverse_cost FROM %s WHERE %s <= %s" 
     
     #Undirected graph or directed graph
-    is_directed = parameters['directed'];
+    is_directed = parameters['directed'] 
     if is_directed:
-        G = nx.DiGraph();
+        G = nx.DiGraph() 
     else:
-        G = nx.Graph();
+        G = nx.Graph() 
     
     #Adding vertices
     cur.execute(vertex_query,(AsIs(parameters['table_v']), 
-        AsIs(parameters['promoted_level_column']), parameters['level'], ));
+        AsIs(parameters['promoted_level_column']), parameters['level'], )) 
     rows = cur.fetchall()
     for row in rows:
-        G.add_node(row[0]);
+        G.add_node(row[0]) 
     
     #Adding edges
     cur.execute(edge_query,(AsIs(parameters['table_e']), 
-        AsIs(parameters['promoted_level_column']), parameters['level'], ));
+        AsIs(parameters['promoted_level_column']), parameters['level'], )) 
     rows = cur.fetchall()
     for row in rows:
         if row[2] > 0:
@@ -106,12 +100,12 @@ def edge_table_to_graph_level(parameters):
 def connect_components(parameters):
     conn = parameters['conn']
     super_node_map = {}
-    G = edge_table_to_graph_level(parameters);
+    G = edge_table_to_graph_level(parameters) 
     #print "Initial Skeleton: "
     #print G.edges()
     #parameters['table'] = parameters['table_v']
-    #parameters['column'] = "id";
-    #nodes = get_column_values(parameters);
+    #parameters['column'] = "id" 
+    #nodes = get_column_values(parameters) 
     for node in G.nodes():
         super_node_map[node] = [node]
     edge_additions = make_strongly_connected(G, super_node_map)
@@ -150,8 +144,7 @@ def make_strongly_connected(G, super_node_map):
             for v in initial_connected_components[i]:
                 node_to_component[v] = i
 
-        DAG = nx.DiGraph();
-
+        DAG = nx.DiGraph() 
         
         #print "Generating DAG"
         # Generating the DAG with every strongly connected component as node
@@ -167,12 +160,12 @@ def make_strongly_connected(G, super_node_map):
         """
         print "Node to connected component"
         print node_to_component
-        print "DAG: ";
+        print "DAG: " 
         for edge in DAG.edges():
             print str(edge[0]) + ", "+ str(edge[1])
         """
         for v in DAG.nodes():
-            #print "node: " + str(v);
+            #print "node: " + str(v) 
             add_inc = False
             add_out = False
             # fetching the first node in the intial strongly connected component
@@ -183,7 +176,7 @@ def make_strongly_connected(G, super_node_map):
             if DAG.in_degree(v) == 0 and DAG.out_degree(v) == 0:
                 add_inc = add_out = True
                 n = 0
-                #break;
+
             elif DAG.in_degree(v) == 0 or DAG.out_degree(v) == 0:
                 n = nx.all_neighbors(DAG, v).next()
                 # add an incoming edge from one of its neighbors
@@ -192,24 +185,23 @@ def make_strongly_connected(G, super_node_map):
                 
                 if DAG.out_degree(v) == 0:
                     add_out = True
-                #break;
-
+                 
             else:
                 continue
 
-            poi = temp_super_node_map[v][0];
+            poi = temp_super_node_map[v][0] 
             connect_poi = temp_super_node_map[n][0]
             #add necessary edges between n and v in DAG
             #add necessary edges between poi and connect_poi in G
             if add_inc == True:
-                #print "DAG connection between " + str(n) + " and " + str(v);
-                #print "G connection between " + str(connect_poi) + " and " + str(poi);
-                DAG.add_edge(n, v);
+                #print "DAG connection between " + str(n) + " and " + str(v) 
+                #print "G connection between " + str(connect_poi) + " and " + str(poi) 
+                DAG.add_edge(n, v) 
                 edge_additions.append((connect_poi, poi))
             if add_out == True:
-                #print "DAG connection between " + str(v) + " and " + str(n);
-                #print "G connection between " + str(connect_poi) + " and " + str(poi);
-                DAG.add_edge(v, n);
+                #print "DAG connection between " + str(v) + " and " + str(n) 
+                #print "G connection between " + str(connect_poi) + " and " + str(poi) 
+                DAG.add_edge(v, n) 
                 edge_additions.append((poi, connect_poi))
 
         #deleting the unwanted variables

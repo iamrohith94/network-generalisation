@@ -11,9 +11,13 @@ stores it in the database.
 
 import math
 import numpy as np
-from statistical_functions import *
-from graphs import *
-from common import *
+from common.statistical_functions import update_with_intervals
+from common.db_functions import run_query
+from common.db_functions import get_selected_columns
+from common.db_functions import AsIs
+import sys
+import psycopg2
+
 db = sys.argv[1];
 table_e = 'cleaned_ways'
 table_v = 'cleaned_ways_vertices_pgr'
@@ -22,7 +26,7 @@ d = {}
 d["db"] = db;
 d["table_e"] = table_e
 d["table_v"] = table_v
-conn = psycopg2.connect(database=d['db'], user="rohithreddy", password="postgres", host="127.0.0.1", port="5432")
+conn = psycopg2.connect(database=d['db'], user="postgres", password="postgres", host="127.0.0.1", port="5432")
 d['conn'] = conn
 
 #Fetching betweenness values

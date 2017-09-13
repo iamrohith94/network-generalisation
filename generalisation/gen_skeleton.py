@@ -5,9 +5,12 @@
 This script makes the skeletons of different levels
 strongly connected by promoting some edges and vertices
 """
-from graphs import *
-from common import *
-from connected_components import *
+from common.graph_functions import connect_components
+from common.db_functions import update_level_skeleton
+from common.db_functions import AsIs
+import sys
+import psycopg2
+
 db = sys.argv[1];
 table_e = 'cleaned_ways'
 table_v = 'cleaned_ways_vertices_pgr'
@@ -16,7 +19,7 @@ d = {}
 d["db"] = db;
 d["table_e"] = table_e
 d["table_v"] = table_v
-conn = psycopg2.connect(database=d['db'], user="rohithreddy", password="postgres", host="127.0.0.1", port="5432")
+conn = psycopg2.connect(database=d['db'], user="postgres", password="postgres", host="127.0.0.1", port="5432")
 d['conn'] = conn
 
 #All edges and vertices whose level <= skeleton_level are included in the skeleton

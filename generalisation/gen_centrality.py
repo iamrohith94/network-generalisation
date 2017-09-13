@@ -1,7 +1,13 @@
-from graphs import *
 import time
 import csv
 import math
+import sys
+from common.graph_functions import edge_table_to_graph
+from common.graph_functions import nx
+from common.graph_functions import AsIs
+import psycopg2
+from common.db_functions import get_count
+
 db = sys.argv[1]
 d={}
 table_e = 'contracted_ways'
@@ -10,7 +16,7 @@ d['db'] = db
 d["table_e"] = table_e
 d["table_v"] = table_v
 
-conn = psycopg2.connect(database=d['db'], user="rohithreddy", password="postgres", host="127.0.0.1", port="5432")
+conn = psycopg2.connect(database=d['db'], user="postgres", password="postgres", host="127.0.0.1", port="5432")
 d['conn'] = conn
 cur = conn.cursor()
 d['query'] = "SELECT source, target, cost, reverse_cost FROM "+table_e
@@ -57,7 +63,7 @@ for x in betweenness.keys():
 
 print "Inserting stuff in a csv file....."
 
-ofile  = open(db+'_test'+'.csv', "wb")
+ofile  = open('../data/'+db+'_centrality'+'.csv', "wb")
 writer = csv.writer(ofile, delimiter=',')
 
 

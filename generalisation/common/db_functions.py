@@ -1,10 +1,6 @@
-    
-import psycopg2
-import networkx as nx
 import sys
 import random
 import math
-from graphs import *
 from psycopg2.extensions import AsIs
 """
 Gives count of the number of rows of a table in a database

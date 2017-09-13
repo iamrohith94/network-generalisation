@@ -1,9 +1,9 @@
 #Cleaning the OSM data by removing small disconnectivities in the network  
-from common import *
-from graphs import *
+import psycopg2
+import networkx as nx
+from common.graph_functions import edge_table_to_graph
+from common.db_functions import get_count
 import sys
-
-
 
 def clean_data(parameters):
     """
@@ -58,28 +58,29 @@ def clean_data(parameters):
     conn.commit()
 
 if __name__ == '__main__':
-	d = {}
-	database = sys.argv[1];
-	d['db'] = database;
-	d['table_e'] = "ways";
-	d['table_v'] = "ways_vertices_pgr";
-	conn = psycopg2.connect(database=d['db'], user="rohithreddy", password="postgres", host="127.0.0.1", port="5432")
-	d['conn'] = conn
+
+    d = {}
+    database = sys.argv[1];
+    d['db'] = database;
+    d['table_e'] = "ways";
+    d['table_v'] = "ways_vertices_pgr";
+    conn = psycopg2.connect(database=d['db'], user="postgres", password="postgres", host="127.0.0.1", port="5432")
+    d['conn'] = conn
 
 
-	d['table'] = 'ways'
-	print "Initial edge count: " + str(get_count(d));
+    d['table'] = 'ways'
+    print "Initial edge count: " + str(get_count(d));
 
-	d['table'] = 'ways_vertices_pgr'
-	print "Initial vertex count: " + str(get_count(d));
+    d['table'] = 'ways_vertices_pgr'
+    print "Initial vertex count: " + str(get_count(d));
 
-	print "Cleaning data......."
-	clean_data(d);
+    print "Cleaning data......."
+    clean_data(d);
 
-	d['table'] = 'cleaned_ways'
-	print "Edge count after Cleaning: " + str(get_count(d));
+    d['table'] = 'cleaned_ways'
+    print "Edge count after Cleaning: " + str(get_count(d));
 
-	d['table'] = 'cleaned_ways_vertices_pgr'
-	print "Vertex count after Cleaning: " + str(get_count(d));
+    d['table'] = 'cleaned_ways_vertices_pgr'
+    print "Vertex count after Cleaning: " + str(get_count(d));
 
-	conn.close();
+    conn.close();
