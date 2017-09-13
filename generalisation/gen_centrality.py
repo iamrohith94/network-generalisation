@@ -16,12 +16,18 @@ d['db'] = db
 d["table_e"] = table_e
 d["table_v"] = table_v
 
+if len(sys.argv) > 2:
+    if sys.argv[2] == "undirected":
+        d['directed'] = False
+    else:
+        d['directed'] = True
+else:
+    d['directed'] = True
+
 conn = psycopg2.connect(database=d['db'], user="postgres", password="postgres", host="127.0.0.1", port="5432")
 d['conn'] = conn
 cur = conn.cursor()
 d['query'] = "SELECT source, target, cost, reverse_cost FROM "+table_e
-
-d['directed'] = True
 
 
 update_query = "UPDATE %s SET %s = %s + %s WHERE source = %s AND target = %s AND %s > 0"
@@ -40,6 +46,7 @@ count = {}
 for i in xrange(0, num_iterations):
 	print "On iteration: ", i
 	betweenness_temp = nx.edge_betweenness_centrality(G, k=k, weight = "weight", normalized=False)
+	#print "app_between: ", betweenness_temp
 	#count = 0
 	for x in betweenness_temp.keys():
 		try:
@@ -60,18 +67,17 @@ print "Number of vertices: ", v_count
 
 for x in betweenness.keys():
 	betweenness[x] = math.ceil(betweenness[x]/count[x])
-
+"""
 print "Inserting stuff in a csv file....."
 
-ofile  = open('../data/'+db+'_centrality'+'.csv', "wb")
+ofile  = open('../data/'+db+'_centrality'+'.csv', "wb+")
 writer = csv.writer(ofile, delimiter=',')
-
 
 for key, value in betweenness.items():
 	if value > 0.00:
 		writer.writerow([key[0], key[1], value])
 violate = 0
-
+"""
 print "Inserting stuff in db....."
 
 for edge in betweenness.keys():

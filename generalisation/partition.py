@@ -1,7 +1,9 @@
 #assigninig unique id to disconnected componennts
-from common import *
-from graphs import *
+from common.graph_functions import edge_table_to_graph
+from common.graph_functions import nx
+from common.graph_functions import AsIs
 import sys
+import psycopg2
 parameters = {} ;
 db = sys.argv[1]
 cleaned_table_e = "cleaned_ways";
@@ -11,7 +13,7 @@ parameters['db'] = db ;
 parameters['table_e'] = "cleaned_ways";
 parameters['table_v'] = "cleaned_ways_vertices_pgr";
 
-conn = psycopg2.connect(database=db, user="rohithreddy", password="postgres", host="127.0.0.1", port="5432")
+conn = psycopg2.connect(database=db, user="postgres", password="postgres", host="127.0.0.1", port="5432")
 cur = conn.cursor()
 parameters['conn'] = conn
 

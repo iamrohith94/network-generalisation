@@ -20,9 +20,9 @@ def generate_contraction_results(parameters):
         cur = conn.cursor()
         edge_query = "SELECT id, source, target, cost, reverse_cost "\
         "FROM "+parameters['input_table'];
-        query = "SELECT * INTO %s FROM pgr_contractGraph(%s, %s)";
-        cur.execute(query, (AsIs(contraction_table), edge_query, parameters['contraction_order'], ));
-        conn.commit();
+        query = "SELECT * INTO %s FROM pgr_contractGraph(%s, %s, directed:=%s)"
+        cur.execute(query, (AsIs(contraction_table), edge_query, parameters['contraction_order'], str(parameters['directed']).lower()))
+        conn.commit()
     
 def update_contraction_results(parameters):
     """
@@ -58,6 +58,13 @@ def update_contraction_results(parameters):
 if __name__ == '__main__':
     d = {}
     d['db'] = sys.argv[1];
+    if len(sys.argv) > 2:
+        if sys.argv[2] == "undirected":
+            d['directed'] = False
+        else:
+            d['directed'] = True
+    else:
+        d['directed'] = True
     table_e = "cleaned_ways"
     table_v = "cleaned_ways_vertices_pgr"
     d['table'] = table_e;
@@ -78,7 +85,7 @@ if __name__ == '__main__':
     print "Generating contracted graph......"
     d['table_e'] = table_e;
     d['table_v'] = table_v;
-    d['directed'] = True;
+    
     d['contraction_column'] = "is_contracted"
     update_contraction_results(d);
 

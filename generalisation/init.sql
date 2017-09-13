@@ -1,3 +1,4 @@
+CREATE EXTENSION pgrouting;
 DROP TABLE IF EXISTS contracted_ways;
 DROP TABLE IF EXISTS contracted_ways_vertices_pgr;
 DROP TABLE IF EXISTS cleaned_ways;
