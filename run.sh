@@ -13,6 +13,9 @@ osm2pgrouting -f /home/rohithreddy/mystuff/research/data/$1.osm -c /usr/share/os
 psql -U postgres -d $1 -f generalisation/init.sql
 
 python generalisation/clean.py $1
+
+#Create index on id, source, target
+psql -U postgres -d $1 -c "CREATE INDEX gen_ind ON cleaned_ways (id, source, target);"
 python generalisation/contraction.py $1 $2
 python generalisation/gen_centrality.py $1 $2
 python generalisation/gen_levels.py $1

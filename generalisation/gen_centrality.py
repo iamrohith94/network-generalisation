@@ -39,7 +39,11 @@ print "Time taken to build graph: ", time.time()-current_time
 num_iterations = 5
 
 current_time = time.time()
-k = 100
+
+d['table'] = table_v
+v_count = get_count(d)
+
+k = v_count/100
 
 betweenness = {}
 count = {}
@@ -59,8 +63,7 @@ for i in xrange(0, num_iterations):
 			count[x] = 1
 
 
-d['table'] = table_v
-v_count = get_count(d)
+
 
 print "k: ", k
 print "Number of vertices: ", v_count
